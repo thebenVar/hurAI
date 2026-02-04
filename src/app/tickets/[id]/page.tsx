@@ -1,91 +1,30 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { TicketDashboard, TicketData } from "@/components/TicketDashboard";
+import { TicketDashboard } from "@/components/TicketDashboard";
+import { getTicket } from "@/app/actions/tickets";
+import { notFound } from "next/navigation";
 
-// Mock data generator based on ID
-const getMockTicketData = (id: string): TicketData => {
-    return {
-        id: id,
-        contact: "Anjali Sharma",
-        source: "phone",
-        duration: "4m 32s",
-        topic: "Translation memory sync failure",
-        sentiment: "negative",
-        priority: "high",
-        summary: "User reported that the translation memory is not syncing with the central server. This is causing delays in the current project. User is frustrated as this has happened twice this week.",
-        keyIssues: [
-            "Translation memory sync failure",
-            "Repeated occurrence",
-            "Project delay risk"
-        ],
-        actionPoints: [
-            { id: "ap-1", text: "Check server logs for sync errors", completed: false, isNextAction: false },
-            { id: "ap-2", text: "Verify user's network connection", completed: true, isNextAction: false },
-            { id: "ap-3", text: "Reset local translation memory cache", completed: false, isNextAction: true }
-        ],
-        potentialCauses: [
-            "Network timeout",
-            "Server overload",
-            "Corrupted local cache"
-        ],
-        assignee: "Raju",
-        status: "open",
-        category: "translation",
-        timeSpent: "15m",
-        activityLog: [
-            {
-                id: "1",
-                type: "note",
-                content: "Initial investigation started. Checking server logs.",
-                timestamp: "10m ago",
-                author: "Raju"
-            },
-            {
-                id: "2",
-                type: "status_change",
-                content: "Status changed to In Progress",
-                timestamp: "15m ago",
-                author: "System"
-            }
-        ],
-        kbMatches: [
-            {
-                id: "kb-1",
-                title: "Troubleshooting TM Sync Issues",
-                excerpt: "Common steps to resolve translation memory synchronization failures...",
-                relevance: 95,
-                url: "#",
-                source: "help_system"
-            },
-            {
-                id: "kb-2",
-                title: "Network Connectivity Guide",
-                excerpt: "How to diagnose and fix network issues affecting tool connectivity...",
-                relevance: 80,
-                url: "#",
-                source: "documentation"
-            }
-        ]
-    };
-};
+interface PageProps {
+    params: Promise<{ id: string }>;
+}
 
-export default function TicketDetailsPage() {
-    const params = useParams();
-    const id = params.id as string;
-    const ticketData = getMockTicketData(id);
+export default async function TicketDetailsPage({ params }: PageProps) {
+    const { id } = await params;
+    const ticketData = await getTicket(id);
+
+    if (!ticketData) {
+        notFound();
+    }
 
     return (
         <div className="min-h-screen bg-slate-50/50 p-8">
             <div className="max-w-4xl mx-auto space-y-6">
                 <Link
-                    href="/tickets"
+                    href="/"
                     className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Back to All Tickets
+                    Back to Dashboard
                 </Link>
 
                 <TicketDashboard data={ticketData} />

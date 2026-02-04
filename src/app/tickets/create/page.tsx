@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { AudioUploader } from "@/components/AudioUploader";
 import { AnalysisLoader } from "@/components/AnalysisLoader";
 import { TicketDashboard, type TicketData } from "@/components/TicketDashboard";
 import { ManualTicketForm } from "@/components/ManualTicketForm";
 import { generateTicketDetails } from "@/app/actions/llm";
+import { createTicket } from "@/app/actions/tickets";
 import { LiveCallAssistant } from "@/components/LiveCallAssistant";
 import { Headset, Sparkles, PenLine, Mic } from "lucide-react";
 
@@ -40,67 +41,13 @@ const MOCK_TICKET_DATA: TicketData = {
     status: "open",
     category: "software",
     timeSpent: "15m",
-    activityLog: [
-        {
-            id: "1",
-            type: "call",
-            author: "System",
-            timestamp: "Today, 10:23 AM",
-            content: "Incoming call from Anjali Sharma (Duration: 4m 12s)",
-            metadata: { duration: "4m 12s" }
-        },
-        {
-            id: "2",
-            type: "log",
-            author: "System",
-            timestamp: "Today, 10:24 AM",
-            content: "Error 503 detected in auth_service logs. Trace ID: #8f92-1a2b"
-        },
-        {
-            id: "3",
-            type: "note",
-            author: "AI Assistant",
-            timestamp: "Today, 10:25 AM",
-            content: "Based on the call transcript, the user is frustrated. Priority escalated to High."
-        },
-        {
-            id: "4",
-            type: "message",
-            author: "Raju",
-            timestamp: "Today, 10:30 AM",
-            content: "I'm investigating the SSO configuration now. It looks like a certificate mismatch."
-        }
-    ],
-    kbMatches: [
-        {
-            id: "kb-1",
-            title: "Configuring SSO with Azure AD",
-            excerpt: "Step-by-step guide to setting up Single Sign-On using Azure Active Directory, including certificate management.",
-            source: "documentation",
-            url: "#",
-            relevance: 95
-        },
-        {
-            id: "kb-2",
-            title: "Ticket #402: SSO Login Failure",
-            excerpt: "Resolved issue where expired certificates caused 503 errors during login flow.",
-            source: "previous_ticket",
-            url: "#",
-            relevance: 88
-        },
-        {
-            id: "kb-3",
-            title: "Community: Best practices for auth certificates",
-            excerpt: "Discussion on how to rotate certificates without downtime.",
-            source: "forum",
-            url: "#",
-            relevance: 72
-        }
-    ]
+    activityLog: [],
+    kbMatches: []
 };
 
 function CreateTicketContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const [viewState, setViewState] = useState<"selection" | "upload" | "processing" | "result" | "manual-entry" | "live-call">("selection");
     const [ticketData, setTicketData] = useState<TicketData | null>(null);
 
@@ -109,20 +56,17 @@ function CreateTicketContent() {
     const initialDescription = searchParams.get("description") || "";
     const initialSource = searchParams.get("source") as any || "phone";
 
+    const [aiInitialData, setAiInitialData] = useState<any>(null);
+
     useEffect(() => {
         const analyzeMessage = async () => {
             if (searchParams.get("view") === "manual-entry" && initialDescription) {
-                // Show partial loading state? For now just switching view.
                 setViewState("manual-entry");
 
-                if (!ticketData) {
-                    // Call the Server Action
+                if (!aiInitialData) {
                     try {
                         const aiData = await generateTicketDetails(initialDescription);
                         if (aiData) {
-                            // We don't set ticketData (result view) yet, we pass it to the form
-                            // But we need a way to pass this async data to ManualTicketForm
-                            // Since ManualTicketForm takes initialData prop, we can store this in a state
                             setAiInitialData({
                                 summary: aiData.summary,
                                 category: aiData.category,
@@ -147,8 +91,6 @@ function CreateTicketContent() {
         analyzeMessage();
     }, [searchParams, initialDescription]);
 
-    const [aiInitialData, setAiInitialData] = useState<any>(null);
-
     const handleFileSelect = (file: File) => {
         setViewState("processing");
     };
@@ -158,9 +100,17 @@ function CreateTicketContent() {
         setViewState("result");
     };
 
-    const handleManualSubmit = (data: TicketData) => {
-        setTicketData(data);
-        setViewState("result");
+    const handleManualSubmit = async (data: TicketData) => {
+        try {
+            const result = await createTicket(data);
+            if (result.success) {
+                router.push(`/tickets/${result.ticketId}`);
+            } else {
+                console.error("Failed to create ticket:", result.error);
+            }
+        } catch (error) {
+            console.error("Error creating ticket:", error);
+        }
     };
 
     const handleLiveCallComplete = (data: TicketData) => {

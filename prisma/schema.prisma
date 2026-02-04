@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Ticket {
+  id              String   @id @default(cuid())
+  contact         String
+  source          String // "phone" | "email" | "whatsapp" | "in-person" | "other"
+  duration        String
+  topic           String
+  sentiment       String // "positive" | "neutral" | "negative"
+  priority        String // "low" | "medium" | "high"
+  summary         String
+  keyIssues       String // Stored as JSON string
+  potentialCauses String // Stored as JSON string
+  
+  // AI Attributes
+  subCategory        String?
+  isUserSolvable     Boolean?
+  userSolvableReason String?
+  followUpQuestions  String? // Stored as JSON string
+
+  assignee  String
+  status    String // "open" | "in-progress" | "resolved" | "closed"
+  category  String // "hardware" | "software" | "network" | "access" | "translation" | "training" | "logistics" | "other"
+  timeSpent String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  actionPoints ActionPoint[]
+  activityLog  ActivityLog[]
+}
+
+model ActionPoint {
+  id           String  @id @default(cuid())
+  text         String
+  completed    Boolean @default(false)
+  isNextAction Boolean @default(false)
+  
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  type      String   // "status_change" | "comment" | "note" | "log"
+  author    String
+  timestamp DateTime @default(now())
+  content   String
+  
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
