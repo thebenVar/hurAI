@@ -6,6 +6,7 @@ import { AudioUploader } from "@/components/AudioUploader";
 import { AnalysisLoader } from "@/components/AnalysisLoader";
 import { TicketDashboard, type TicketData } from "@/components/TicketDashboard";
 import { ManualTicketForm } from "@/components/ManualTicketForm";
+import { generateTicketDetails } from "@/app/actions/llm";
 import { LiveCallAssistant } from "@/components/LiveCallAssistant";
 import { Headset, Sparkles, PenLine, Mic } from "lucide-react";
 
@@ -109,10 +110,44 @@ function CreateTicketContent() {
     const initialSource = searchParams.get("source") as any || "phone";
 
     useEffect(() => {
-        if (searchParams.get("view") === "manual-entry") {
-            setViewState("manual-entry");
-        }
-    }, [searchParams]);
+        const analyzeMessage = async () => {
+            if (searchParams.get("view") === "manual-entry" && initialDescription) {
+                // Show partial loading state? For now just switching view.
+                setViewState("manual-entry");
+
+                if (!ticketData) {
+                    // Call the Server Action
+                    try {
+                        const aiData = await generateTicketDetails(initialDescription);
+                        if (aiData) {
+                            // We don't set ticketData (result view) yet, we pass it to the form
+                            // But we need a way to pass this async data to ManualTicketForm
+                            // Since ManualTicketForm takes initialData prop, we can store this in a state
+                            setAiInitialData({
+                                summary: aiData.summary,
+                                category: aiData.category,
+                                subCategory: aiData.subCategory,
+                                priority: aiData.priority,
+                                sentiment: aiData.sentiment,
+                                keyIssues: aiData.keyIssues,
+                                potentialCauses: aiData.potentialCauses,
+                                actionPoints: aiData.suggestedActions,
+                                isUserSolvable: aiData.isUserSolvable,
+                                userSolvableReason: aiData.userSolvableReason,
+                                followUpQuestions: aiData.followUpQuestions
+                            });
+                        }
+                    } catch (e) {
+                        console.error("AI Analysis failed", e);
+                    }
+                }
+            }
+        };
+
+        analyzeMessage();
+    }, [searchParams, initialDescription]);
+
+    const [aiInitialData, setAiInitialData] = useState<any>(null);
 
     const handleFileSelect = (file: File) => {
         setViewState("processing");
@@ -221,7 +256,8 @@ function CreateTicketContent() {
                             initialData={{
                                 contact: initialContact,
                                 summary: initialDescription,
-                                source: initialSource
+                                source: initialSource,
+                                ...aiInitialData
                             }}
                         />
                     </div>

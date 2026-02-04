@@ -44,6 +44,11 @@ export interface TicketData {
     actionPoints: { id: string; text: string; completed: boolean; isNextAction?: boolean }[];
     potentialCauses: string[];
     // New attributes
+    subCategory?: string;
+    isUserSolvable?: boolean;
+    userSolvableReason?: string;
+    followUpQuestions?: string[];
+
     assignee: string;
     status: "open" | "in-progress" | "resolved" | "closed";
     category: "hardware" | "software" | "network" | "access" | "translation" | "training" | "logistics" | "other";
