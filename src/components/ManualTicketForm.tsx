@@ -84,6 +84,34 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
     const [tempCauses, setTempCauses] = useState(initialData?.potentialCauses?.map(c => `- ${c}`).join('\n') || "");
     const [tempActions, setTempActions] = useState(initialData?.actionPoints?.map(a => `- ${a}`).join('\n') || "");
 
+    // Update state when initialData changes (e.g. from async Server Action)
+    useEffect(() => {
+        if (initialData) {
+            setFormData(prev => ({
+                ...prev,
+                contact: initialData.contact || prev.contact,
+                source: initialData.source || prev.source,
+                summary: initialData.summary || prev.summary,
+                keyIssues: initialData.keyIssues || prev.keyIssues,
+                potentialCauses: initialData.potentialCauses || prev.potentialCauses,
+                actionPoints: initialData.actionPoints ? initialData.actionPoints.map((text, i) => ({
+                    id: `action-${i}`, text, completed: false, isNextAction: false
+                })) : prev.actionPoints,
+                category: initialData.category || prev.category,
+                subCategory: initialData.subCategory || prev.subCategory,
+                isUserSolvable: initialData.isUserSolvable ?? prev.isUserSolvable,
+                userSolvableReason: initialData.userSolvableReason || prev.userSolvableReason,
+                followUpQuestions: initialData.followUpQuestions || prev.followUpQuestions,
+                priority: initialData.priority || prev.priority,
+                sentiment: initialData.sentiment || prev.sentiment,
+            }));
+
+            if (initialData.keyIssues) setTempIssues(initialData.keyIssues.map(i => `- ${i}`).join('\n'));
+            if (initialData.potentialCauses) setTempCauses(initialData.potentialCauses.map(c => `- ${c}`).join('\n'));
+            if (initialData.actionPoints) setTempActions(initialData.actionPoints.map(a => `- ${a}`).join('\n'));
+        }
+    }, [initialData]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 

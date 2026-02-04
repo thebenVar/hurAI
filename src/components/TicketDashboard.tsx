@@ -23,7 +23,8 @@ import {
     Lightbulb,
     ArrowRight,
     X,
-    Plus
+    Plus,
+    Star
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -356,6 +357,67 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                     <section className="h-[400px]">
                         <KnowledgeBaseSuggestions matches={data.kbMatches} onCite={handleCiteArticle} />
                     </section>
+
+                    {/* Agent Assist Panel */}
+                    {(data.isUserSolvable !== undefined || (data.followUpQuestions && data.followUpQuestions.length > 0)) && (
+                        <section className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 flex flex-col gap-6">
+                            <div className="flex items-center gap-2 text-indigo-900 font-bold">
+                                <Star className="h-5 w-5 text-indigo-600" />
+                                <h2>Agent Assist</h2>
+                            </div>
+
+                            {/* User Solvable Badge */}
+                            {data.isUserSolvable !== undefined && (
+                                <div className={cn(
+                                    "p-4 rounded-xl border border-2",
+                                    data.isUserSolvable
+                                        ? "bg-green-50 border-green-200 text-green-800"
+                                        : "bg-amber-50 border-amber-200 text-amber-800"
+                                )}>
+                                    <div className="flex items-center gap-2 mb-2 font-semibold">
+                                        {data.isUserSolvable ? (
+                                            <>
+                                                <div className="h-2 w-2 rounded-full bg-green-600" />
+                                                User Solvable
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="h-2 w-2 rounded-full bg-amber-600" />
+                                                Requires Agent
+                                            </>
+                                        )}
+                                    </div>
+                                    <p className="text-sm opacity-90 leading-relaxed">
+                                        {data.userSolvableReason}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Follow-up Questions */}
+                            {data.followUpQuestions && data.followUpQuestions.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-semibold text-indigo-900 mb-3 uppercase tracking-wider">Ask the User</h3>
+                                    <ul className="space-y-3">
+                                        {data.followUpQuestions.map((q, i) => (
+                                            <li key={i} className="bg-white p-3 rounded-xl shadow-sm border border-indigo-100 text-sm text-slate-700">
+                                                {q}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Suggested Sub-category */}
+                            {data.subCategory && (
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="font-semibold text-indigo-900">Suggested Sub-category:</span>
+                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                        {data.subCategory}
+                                    </span>
+                                </div>
+                            )}
+                        </section>
+                    )}
 
                     {/* Action Points */}
                     <section className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100 h-full flex flex-col">
