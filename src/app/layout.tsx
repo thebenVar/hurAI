@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoDeskAI",
-  description: "AI-powered helpdesk ticket generation",
+  title: "Kingdom Cloud Services",
+  description: "A comprehensive solution for BT Cloud Services and support",
 };
 
 export default function RootLayout({

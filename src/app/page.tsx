@@ -130,8 +130,8 @@ export default function Dashboard() {
                     <div className="flex justify-between items-start mb-1">
                       <span className="text-xs font-medium text-slate-500">{ticket.id}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${ticket.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100' :
-                          ticket.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                            'bg-blue-50 text-blue-700 border-blue-100'
+                        ticket.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                          'bg-blue-50 text-blue-700 border-blue-100'
                         }`}>
                         {ticket.priority}
                       </span>
@@ -155,7 +155,7 @@ export default function Dashboard() {
           <QuickActions onAddMessage={handleAddMessage} />
 
           <div className="bg-indigo-900 rounded-2xl p-6 text-white shadow-lg shadow-indigo-200">
-            <h3 className="font-semibold text-lg mb-2">AutoDesk AI</h3>
+            <h3 className="font-semibold text-lg mb-2">Kingdom Cloud Services AI</h3>
             <p className="text-indigo-200 text-sm mb-6">
               3 emerging trends identified today.
             </p>

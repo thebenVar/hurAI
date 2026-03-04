@@ -38,7 +38,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Headset className="h-5 w-5" />
                     </div>
                     <span className="text-lg font-bold tracking-tight text-slate-900">
-                        AutoDesk<span className="text-indigo-600">AI</span>
+                        Kingdom Cloud<span className="text-indigo-600"> Services</span>
                     </span>
                 </div>
                 <button

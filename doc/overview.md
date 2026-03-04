@@ -1,10 +1,10 @@
-# HUR: Helpdesk with a Unified Response - Project Documentation
+# Kingdom Cloud Services - Project Documentation
 
 ## 1. Project Overview
 
-**HUR** (Helpdesk with a Unified Response) is a modern, Next.js-based helpdesk application designed to streamline support operations. It acts as a central hub for support agents, aggregating communication from various channels and providing powerful tools for ticket management and resolution.
+**Kingdom Cloud Services** is a modern, Next.js-based helpdesk application designed to streamline support operations. It acts as a central hub for support agents, aggregating communication from various channels and providing powerful tools for ticket management and resolution.
 
-The core philosophy of HUR is to provide a **Unified Response**—bringing together WhatsApp, Email, Phone, and Internal notes into a single, cohesive interface.
+The core philosophy of Kingdom Cloud Services is to provide a **Unified Response**—bringing together WhatsApp, Email, Phone, and Internal notes into a single, cohesive interface.
 
 ## 2. Core Functionalities
 
@@ -60,7 +60,7 @@ The system proactively suggests relevant Knowledge Base (KB) articles based on t
 
 ## 4. AI & Automation
 
-### 4.1. AutoDesk AI
+### 4.1. Kingdom Cloud Services AI
 An embedded AI assistant that analyzes system-wide data to identify emerging trends (e.g., "3 emerging trends identified today") and offer insights.
 
 ### 4.2. Call Analysis (Experimental)
