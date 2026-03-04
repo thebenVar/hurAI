@@ -11,39 +11,8 @@ import { createTicket } from "@/app/actions/tickets";
 import { LiveCallAssistant } from "@/components/LiveCallAssistant";
 import { Headset, Sparkles, PenLine, Mic } from "lucide-react";
 
-// Mock data for the experiment
-const MOCK_TICKET_DATA: TicketData = {
-    id: "INC-2024-8492",
-    contact: "Anjali Sharma",
-    source: "phone",
-    duration: "4m 12s",
-    topic: "Login Authentication Failure",
-    sentiment: "negative",
-    priority: "high",
-    summary: "User is unable to log in to the enterprise portal after the recent security update. She reports receiving an 'Error 503' message despite using correct credentials. She has already tried clearing cache and resetting her password without success.",
-    keyIssues: [
-        "Persistent Error 503 on login attempt",
-        "Password reset did not resolve the issue",
-        "User is blocked from accessing critical financial reports"
-    ],
-    potentialCauses: [
-        "Recent security patch deployment (v2.4.1) might have caused a regression",
-        "SSO Service timeout or misconfiguration",
-        "User account might be locked at the directory level"
-    ],
-    actionPoints: [
-        { id: "ap-1", text: "Check server logs for 503 errors during the reported timestamp", completed: false, isNextAction: false },
-        { id: "ap-2", text: "Verify SSO connectivity status with the identity provider", completed: true, isNextAction: false },
-        { id: "ap-3", text: "Temporarily whitelist user IP if urgent access is needed", completed: false, isNextAction: true },
-        { id: "ap-4", text: "Escalate to DevOps if widespread outage is suspected", completed: false, isNextAction: false }
-    ],
-    assignee: "Raju",
-    status: "open",
-    category: "software",
-    timeSpent: "15m",
-    activityLog: [],
-    kbMatches: []
-};
+// Mock data removed in favor of DB
+
 
 function CreateTicketContent() {
     const searchParams = useSearchParams();
@@ -96,7 +65,7 @@ function CreateTicketContent() {
     };
 
     const handleProcessingComplete = () => {
-        setTicketData(MOCK_TICKET_DATA);
+        // setTicketData(MOCK_TICKET_DATA); // Removed
         setViewState("result");
     };
 

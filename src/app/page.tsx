@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
 import { TicketDashboard } from "@/components/TicketDashboard";
 import { MessageFeed, IncomingMessage } from "@/components/MessageFeed";
 import { QuickActions } from "@/components/QuickActions";
+import { getAllTickets, getDashboardStats } from "@/app/actions/tickets";
 
 const MOCK_MESSAGES: IncomingMessage[] = [
   {
@@ -40,6 +41,29 @@ const MOCK_MESSAGES: IncomingMessage[] = [
 
 export default function Dashboard() {
   const [messages, setMessages] = useState<IncomingMessage[]>(MOCK_MESSAGES);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalTickets: 0,
+    avgResolution: "--",
+    customerSatisfaction: "--",
+    pendingActions: 0
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [ticketsData, statsData] = await Promise.all([
+          getAllTickets(),
+          getDashboardStats()
+        ]);
+        setTickets(ticketsData);
+        setStats(statsData);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleAddMessage = (text: string, type: "text" | "voice" | "image" | "video") => {
     const newMessage: IncomingMessage = {
@@ -60,40 +84,23 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8 pb-8">
-      {/* Welcome Section - Removed to save space */}
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-sm text-slate-500 mb-1">Total Tickets</div>
-          <div className="text-2xl font-bold text-slate-900">24</div>
-          <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            <span>+12%</span>
-            <span className="text-slate-400">vs yesterday</span>
-          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.totalTickets}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-sm text-slate-500 mb-1">Avg. Resolution</div>
-          <div className="text-2xl font-bold text-slate-900">1h 42m</div>
-          <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            <span>-8%</span>
-            <span className="text-slate-400">vs last week</span>
-          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.avgResolution}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-sm text-slate-500 mb-1">Customer Satisfaction</div>
-          <div className="text-2xl font-bold text-slate-900">4.8/5.0</div>
-          <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            <span>+0.2</span>
-            <span className="text-slate-400">vs last month</span>
-          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.customerSatisfaction}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-sm text-slate-500 mb-1">Pending Actions</div>
-          <div className="text-2xl font-bold text-slate-900">7</div>
-          <div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-            <span>Needs attention</span>
-          </div>
+          <div className="text-2xl font-bold text-slate-900">{stats.pendingActions}</div>
         </div>
       </div>
 
@@ -113,29 +120,32 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="divide-y divide-slate-100 overflow-y-auto flex-1">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <Link href={`/tickets/INC-2024-849${i}`} key={i} className="block px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer group">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-medium text-slate-500">INC-2024-849{i}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${i % 3 === 0 ? 'bg-red-50 text-red-700 border-red-100' :
-                      i % 2 === 0 ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                        'bg-blue-50 text-blue-700 border-blue-100'
-                      }`}>
-                      {i % 3 === 0 ? 'High' : i % 2 === 0 ? 'Medium' : 'Low'}
-                    </span>
-                  </div>
-                  <h4 className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
-                    {i % 3 === 0 ? 'System outage in region US-East' :
-                      i % 2 === 0 ? 'Login failure for user account' :
-                        'Printer configuration issue'}
-                  </h4>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                    <span>Anjali Sharma</span>
-                    <span>•</span>
-                    <span>2h ago</span>
-                  </div>
-                </Link>
-              ))}
+              {tickets.length === 0 ? (
+                <div className="p-8 text-center text-slate-500 text-sm">
+                  No recent tickets found.
+                </div>
+              ) : (
+                tickets.map((ticket) => (
+                  <Link href={`/tickets/${ticket.id}`} key={ticket.id} className="block px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-xs font-medium text-slate-500">{ticket.id}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${ticket.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100' :
+                          ticket.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                            'bg-blue-50 text-blue-700 border-blue-100'
+                        }`}>
+                        {ticket.priority}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                      {ticket.summary}
+                    </h4>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                      <span>{ticket.contact}</span>
+                      <span>•</span>
+                      <span>{ticket.timeSpent}</span>
+                    </div>
+                  </Link>
+                )))}
             </div>
           </div>
         </div>
@@ -160,28 +170,6 @@ export default function Dashboard() {
 }
 
 function StatCard({ title, value, trend, trendUp, icon: Icon, color }: any) {
-  const colorStyles = {
-    blue: "bg-blue-50 text-blue-600",
-    indigo: "bg-indigo-50 text-indigo-600",
-    green: "bg-green-50 text-green-600",
-    amber: "bg-amber-50 text-amber-600"
-  };
-
-  return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${colorStyles[color as keyof typeof colorStyles]}`}>
-          <Icon className="h-6 w-6" />
-        </div>
-        <span className={`text-xs font-medium px-2 py-1 rounded-full ${trendUp ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-          }`}>
-          {trend}
-        </span>
-      </div>
-      <div>
-        <h3 className="text-slate-500 text-sm font-medium">{title}</h3>
-        <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
-      </div>
-    </div>
-  );
+  // Kept for future use if needed, though currently simplified in main return
+  return null;
 }

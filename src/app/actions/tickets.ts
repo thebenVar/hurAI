@@ -1,10 +1,8 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { TicketData } from "@/components/TicketDashboard";
 import { redirect } from "next/navigation";
-
-const prisma = new PrismaClient();
 
 export async function createTicket(data: TicketData) {
     try {
@@ -105,4 +103,53 @@ export async function getTicket(id: string): Promise<TicketData | null> {
         })),
         kbMatches: [] // Mock for now
     };
+}
+
+export async function getAllTickets() {
+    try {
+        const tickets = await prisma.ticket.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 10 // Limit for dashboard
+        });
+
+        return tickets.map((ticket: any) => ({
+            id: ticket.id,
+            contact: ticket.contact,
+            source: ticket.source as any,
+            topic: ticket.topic,
+            priority: ticket.priority as any,
+            status: ticket.status as any,
+            timeSpent: ticket.timeSpent,
+            createdAt: ticket.createdAt.toISOString(),
+            summary: ticket.summary
+        }));
+    } catch (error) {
+        console.error("Failed to fetch tickets:", error);
+        return [];
+    }
+}
+
+export async function getDashboardStats() {
+    try {
+        const totalTickets = await prisma.ticket.count();
+        const pendingActions = await prisma.actionPoint.count({
+            where: { completed: false }
+        });
+
+        // Placeholder for complex metrics not yet implemented
+        return {
+            totalTickets,
+            avgResolution: "--",
+            customerSatisfaction: "--",
+            pendingActions
+        };
+    } catch (error) {
+        console.error("Failed to fetch stats:", error);
+        return {
+            totalTickets: 0,
+            avgResolution: "--",
+            customerSatisfaction: "--",
+            pendingActions: 0
+        };
+    }
 }

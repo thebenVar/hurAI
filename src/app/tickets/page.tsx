@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
     Plus,
     Search,
     Filter,
-    MoreHorizontal,
     ArrowUpRight,
     Clock,
     CheckCircle2,
@@ -20,106 +19,43 @@ import {
     Monitor,
     Wifi,
     Key,
-    Tag,
-    User
+    Tag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Mock Data
-const MOCK_TICKETS = [
-    {
-        id: "INC-2024-1001",
-        topic: "Translation memory sync failure",
-        category: "translation",
-        status: "open",
-        priority: "high",
-        assignee: "Raju",
-        created: "2 hrs ago",
-        contact: "Anjali Sharma"
-    },
-    {
-        id: "INC-2024-1002",
-        topic: "New translator onboarding access",
-        category: "access",
-        status: "in-progress",
-        priority: "medium",
-        assignee: "Priya",
-        created: "4 hrs ago",
-        contact: "Vikram Singh"
-    },
-    {
-        id: "INC-2024-1003",
-        topic: "Logistics portal downtime",
-        category: "logistics",
-        status: "resolved",
-        priority: "high",
-        assignee: "Amit",
-        created: "1 day ago",
-        contact: "Logistics Team"
-    },
-    {
-        id: "INC-2024-1004",
-        topic: "Training video playback issue",
-        category: "training",
-        status: "open",
-        priority: "low",
-        assignee: "Unassigned",
-        created: "1 day ago",
-        contact: "Neha Gupta"
-    },
-    {
-        id: "INC-2024-1005",
-        topic: "VPN connection unstable",
-        category: "network",
-        status: "closed",
-        priority: "medium",
-        assignee: "Raju",
-        created: "2 days ago",
-        contact: "Remote User"
-    },
-    {
-        id: "INC-2024-1006",
-        topic: "CAT Tool license expiry warning",
-        category: "software",
-        status: "open",
-        priority: "high",
-        assignee: "Priya",
-        created: "3 hrs ago",
-        contact: "Translation Dept"
-    },
-    {
-        id: "INC-2024-1007",
-        topic: "Printer jamming in Building B",
-        category: "hardware",
-        status: "open",
-        priority: "low",
-        assignee: "Unassigned",
-        created: "5 hrs ago",
-        contact: "Office Admin"
-    },
-    {
-        id: "INC-2024-1008",
-        topic: "Project deadline extension request",
-        category: "other",
-        status: "resolved",
-        priority: "medium",
-        assignee: "Suresh",
-        created: "3 days ago",
-        contact: "Project Lead"
-    }
-];
+import { getAllTickets } from "@/app/actions/tickets";
 
 export default function AllTicketsPage() {
+    const [tickets, setTickets] = useState<any[]>([]);
     const [filterStatus, setFilterStatus] = useState<string>("all");
     const [filterPriority, setFilterPriority] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredTickets = MOCK_TICKETS.filter(ticket => {
+    useEffect(() => {
+        const fetchTickets = async () => {
+            const data = await getAllTickets();
+            // Transform data if needed to match UI expectations (map fields)
+            const mappedData = data.map((t: any) => ({
+                id: t.id,
+                topic: t.summary || t.topic, // Fallback
+                category: t.category || "other",
+                status: t.status,
+                priority: t.priority,
+                assignee: t.assignee || "Unassigned",
+                created: new Date(t.createdAt).toLocaleDateString(), // Format date
+                contact: t.contact
+            }));
+            setTickets(mappedData);
+        };
+        fetchTickets();
+    }, []);
+
+    const filteredTickets = tickets.filter(ticket => {
         const matchesStatus = filterStatus === "all" || ticket.status === filterStatus;
         const matchesPriority = filterPriority === "all" || ticket.priority === filterPriority;
-        const matchesSearch = ticket.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ticket.contact.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch =
+            (ticket.topic?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+            (ticket.id?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+            (ticket.contact?.toLowerCase() || "").includes(searchQuery.toLowerCase());
         return matchesStatus && matchesPriority && matchesSearch;
     });
 
@@ -294,11 +230,7 @@ export default function AllTicketsPage() {
                         </table>
                     </div>
                     <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-sm text-slate-500">
-                        <span>Showing {filteredTickets.length} of {MOCK_TICKETS.length} tickets</span>
-                        <div className="flex gap-2">
-                            <button className="px-3 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50" disabled>Previous</button>
-                            <button className="px-3 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50" disabled>Next</button>
-                        </div>
+                        <span>Showing {filteredTickets.length} tickets</span>
                     </div>
                 </div>
             </div>
