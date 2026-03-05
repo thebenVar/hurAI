@@ -179,17 +179,17 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
     return (
         <div className="w-full max-w-6xl mx-auto h-[85vh] flex flex-col md:flex-row gap-6">
             {/* Main Call Area */}
-            <div className="flex-1 flex flex-col bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 {/* Header */}
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                     <div className="flex items-center gap-4">
                         <div className={cn(
                             "h-3 w-3 rounded-full animate-pulse",
                             isListening ? "bg-red-500" : "bg-slate-300"
                         )} />
                         <div>
-                            <h2 className="font-semibold text-slate-900">Live Call Session</h2>
-                            <p className="text-xs text-slate-500 font-mono">{formatDuration(duration)}</p>
+                            <h2 className="font-semibold text-slate-900 dark:text-slate-50">Live Call Session</h2>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{formatDuration(duration)}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
                             className={cn(
                                 "p-3 rounded-full transition-all",
                                 isListening
-                                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                    ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
                                     : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200"
                             )}
                         >
@@ -230,7 +230,7 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
                         )}>
                             <div className={cn(
                                 "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                                item.speaker === "agent" ? "bg-indigo-100 text-indigo-600" : "bg-slate-200 text-slate-600"
+                                item.speaker === "agent" ? "bg-indigo-100 text-indigo-600" : "bg-slate-200 text-slate-600 dark:text-slate-400"
                             )}>
                                 {item.speaker === "agent" ? "You" : <User className="h-4 w-4" />}
                             </div>
@@ -238,7 +238,7 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
                                 "p-4 rounded-2xl text-sm",
                                 item.speaker === "agent"
                                     ? "bg-indigo-600 text-white rounded-tr-none"
-                                    : "bg-white border border-slate-200 text-slate-700 rounded-tl-none shadow-sm"
+                                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-tl-none shadow-sm"
                             )}>
                                 <p>{item.text}</p>
                                 <span className={cn(
@@ -256,10 +256,10 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
                             "flex gap-4 max-w-[80%]",
                             "ml-auto flex-row-reverse" // Assume current speaker is agent for now or toggle? Actually speech API doesn't tell us. Let's assume user input is 'agent' or 'customer' based on context? For now, let's just show it as 'listening'
                         )}>
-                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 animate-pulse">
+                            <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 animate-pulse">
                                 <div className="h-2 w-2 bg-slate-400 rounded-full" />
                             </div>
-                            <div className="p-4 rounded-2xl text-sm bg-slate-100 text-slate-500 italic">
+                            <div className="p-4 rounded-2xl text-sm bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 italic">
                                 {currentText}...
                             </div>
                         </div>
@@ -270,25 +270,25 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
             {/* AI Copilot Sidebar */}
             <div className="w-full md:w-80 flex flex-col gap-4">
                 {/* Sentiment Card */}
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Live Sentiment</h3>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Live Sentiment</h3>
                     <div className="flex items-center gap-3">
                         <div className={cn(
-                            "text-2xl p-2 rounded-full bg-slate-50",
+                            "text-2xl p-2 rounded-full bg-slate-50 dark:bg-slate-800/50",
                             sentiment === "positive" ? "bg-green-100" : sentiment === "negative" ? "bg-red-100" : ""
                         )}>
                             {sentiment === "positive" ? "😊" : sentiment === "negative" ? "😠" : "😐"}
                         </div>
                         <div>
-                            <p className="font-medium text-slate-900 capitalize">{sentiment}</p>
-                            <p className="text-xs text-slate-500">Based on tone & keywords</p>
+                            <p className="font-medium text-slate-900 dark:text-slate-50 capitalize">{sentiment}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Based on tone & keywords</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Topic Detection */}
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Detected Topic</h3>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Detected Topic</h3>
                     {detectedTopic ? (
                         <div className="flex items-center gap-2 text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100">
                             <Sparkles className="h-4 w-4" />
@@ -300,11 +300,11 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
                 </div>
 
                 {/* Suggestions */}
-                <div className="flex-1 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                    <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">AI Suggestions</h3>
+                <div className="flex-1 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">AI Suggestions</h3>
                     <div className="space-y-3 overflow-y-auto flex-1">
                         {suggestions.map((suggestion) => (
-                            <div key={suggestion.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer group">
+                            <div key={suggestion.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer group">
                                 <div className="flex gap-2 items-start">
                                     {suggestion.type === "question" ? (
                                         <MessageSquare className="h-4 w-4 text-blue-500 mt-0.5" />
@@ -313,7 +313,7 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
                                     ) : (
                                         <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
                                     )}
-                                    <p className="text-sm text-slate-700 group-hover:text-indigo-900">{suggestion.text}</p>
+                                    <p className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-indigo-900">{suggestion.text}</p>
                                 </div>
                             </div>
                         ))}

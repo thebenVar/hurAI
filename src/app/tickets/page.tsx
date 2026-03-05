@@ -65,7 +65,7 @@ export default function AllTicketsPage() {
             case "training": return <GraduationCap className="h-4 w-4 text-emerald-500" />;
             case "logistics": return <Truck className="h-4 w-4 text-amber-500" />;
             case "software": return <AppWindow className="h-4 w-4 text-purple-500" />;
-            case "hardware": return <Monitor className="h-4 w-4 text-slate-500" />;
+            case "hardware": return <Monitor className="h-4 w-4 text-slate-500 dark:text-slate-400" />;
             case "network": return <Wifi className="h-4 w-4 text-cyan-500" />;
             case "access": return <Key className="h-4 w-4 text-rose-500" />;
             default: return <Tag className="h-4 w-4 text-gray-500" />;
@@ -77,7 +77,7 @@ export default function AllTicketsPage() {
             case "open": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"><AlertCircle className="h-3 w-3" /> Open</span>;
             case "in-progress": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"><Clock className="h-3 w-3" /> In Progress</span>;
             case "resolved": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200"><CheckCircle2 className="h-3 w-3" /> Resolved</span>;
-            case "closed": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-50 text-slate-700 border border-slate-200"><XCircle className="h-3 w-3" /> Closed</span>;
+            case "closed": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"><XCircle className="h-3 w-3" /> Closed</span>;
             default: return null;
         }
     };
@@ -92,13 +92,13 @@ export default function AllTicketsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-8">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-800/50 p-8">
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">All Tickets</h1>
-                        <p className="text-slate-500 text-sm mt-1">Manage and track all support requests</p>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">All Tickets</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage and track all support requests</p>
                     </div>
                     <Link
                         href="/tickets/create"
@@ -110,13 +110,13 @@ export default function AllTicketsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="relative w-full md:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Search tickets..."
-                            className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                            className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -125,10 +125,10 @@ export default function AllTicketsPage() {
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         <div className="flex items-center gap-2">
                             <Filter className="h-4 w-4 text-slate-400" />
-                            <span className="text-sm font-medium text-slate-600">Filters:</span>
+                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
                         </div>
                         <select
-                            className="px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
+                            className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white dark:bg-slate-900"
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                         >
@@ -139,7 +139,7 @@ export default function AllTicketsPage() {
                             <option value="closed">Closed</option>
                         </select>
                         <select
-                            className="px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
+                            className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white dark:bg-slate-900"
                             value={filterPriority}
                             onChange={(e) => setFilterPriority(e.target.value)}
                         >
@@ -152,19 +152,19 @@ export default function AllTicketsPage() {
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200">
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticket ID</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Topic</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Priority</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Assignee</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ticket ID</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Topic</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Priority</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Assignee</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Created</th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -172,22 +172,22 @@ export default function AllTicketsPage() {
                                     filteredTickets.map((ticket) => (
                                         <tr
                                             key={ticket.id}
-                                            className="hover:bg-slate-50/50 transition-colors group cursor-pointer relative"
+                                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-colors group cursor-pointer relative"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <Link href={`/tickets/${ticket.id}`} className="absolute inset-0 z-10" />
-                                                <span className="font-mono text-sm font-medium text-slate-600 relative z-0">{ticket.id}</span>
+                                                <span className="font-mono text-sm font-medium text-slate-600 dark:text-slate-400 relative z-0">{ticket.id}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-medium text-slate-900">{ticket.topic}</span>
-                                                    <span className="text-xs text-slate-500">{ticket.contact}</span>
+                                                    <span className="text-sm font-medium text-slate-900 dark:text-slate-50">{ticket.topic}</span>
+                                                    <span className="text-xs text-slate-500 dark:text-slate-400">{ticket.contact}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
                                                     {getCategoryIcon(ticket.category)}
-                                                    <span className="text-sm text-slate-600 capitalize">{ticket.category}</span>
+                                                    <span className="text-sm text-slate-600 dark:text-slate-400 capitalize">{ticket.category}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -201,12 +201,12 @@ export default function AllTicketsPage() {
                                                     <div className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
                                                         {ticket.assignee === "Unassigned" ? <HelpCircle className="h-3 w-3" /> : ticket.assignee.charAt(0)}
                                                     </div>
-                                                    <span className={cn("text-sm", ticket.assignee === "Unassigned" ? "text-slate-400 italic" : "text-slate-700")}>
+                                                    <span className={cn("text-sm", ticket.assignee === "Unassigned" ? "text-slate-400 italic" : "text-slate-700 dark:text-slate-300")}>
                                                         {ticket.assignee}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                                                 {ticket.created}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right relative z-20">
@@ -218,7 +218,7 @@ export default function AllTicketsPage() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                                        <td colSpan={8} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                                             <div className="flex flex-col items-center gap-2">
                                                 <Search className="h-8 w-8 text-slate-300" />
                                                 <p>No tickets found matching your filters.</p>
@@ -229,7 +229,7 @@ export default function AllTicketsPage() {
                             </tbody>
                         </table>
                     </div>
-                    <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-sm text-slate-500">
+                    <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
                         <span>Showing {filteredTickets.length} tickets</span>
                     </div>
                 </div>

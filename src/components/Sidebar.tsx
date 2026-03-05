@@ -29,21 +29,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     return (
         <aside className={cn(
-            "fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 bg-white transition-transform duration-300 lg:translate-x-0",
+            "fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-transform duration-300 lg:translate-x-0",
             isOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-            <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
+            <div className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-6">
                 <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
                         <Headset className="h-5 w-5" />
                     </div>
-                    <span className="text-lg font-bold tracking-tight text-slate-900">
+                    <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50">
                         Kingdom Cloud<span className="text-indigo-600"> Services</span>
                     </span>
                 </div>
                 <button
                     onClick={onClose}
-                    className="lg:hidden text-slate-500 hover:text-slate-700"
+                    className="lg:hidden text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300"
                 >
                     <X className="h-5 w-5" />
                 </button>
@@ -61,7 +61,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                                 isActive
                                     ? "bg-indigo-50 text-indigo-600"
-                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-50"
                             )}
                         >
                             <item.icon className={cn("h-5 w-5", isActive ? "text-indigo-600" : "text-slate-400")} />

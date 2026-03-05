@@ -90,8 +90,8 @@ function CreateTicketContent() {
     return (
         <div className="max-w-5xl mx-auto">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900">Create New Ticket</h1>
-                <p className="text-slate-500 mt-2">Choose how you want to create a ticket: upload a call recording, start a live session, or enter details manually.</p>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Create New Ticket</h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">Choose how you want to create a ticket: upload a call recording, start a live session, or enter details manually.</p>
             </div>
 
             <div className="relative min-h-[400px]">
@@ -101,14 +101,14 @@ function CreateTicketContent() {
                             {/* Upload Option */}
                             <button
                                 onClick={() => setViewState("upload")}
-                                className="group flex flex-col items-center gap-6 p-8 bg-white rounded-3xl border-2 border-dashed border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all duration-300 text-center h-full"
+                                className="group flex flex-col items-center gap-6 p-8 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50/50 transition-all duration-300 text-center h-full"
                             >
                                 <div className="h-16 w-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <Headset className="h-8 w-8" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-2">Upload Call Recording</h3>
-                                    <p className="text-sm text-slate-500 leading-relaxed">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-2">Upload Call Recording</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                                         Upload MP3/WAV files for AI analysis and auto-ticket generation.
                                     </p>
                                 </div>
@@ -117,14 +117,14 @@ function CreateTicketContent() {
                             {/* Live Call Option */}
                             <button
                                 onClick={() => setViewState("live-call")}
-                                className="group flex flex-col items-center gap-6 p-8 bg-white rounded-3xl border-2 border-dashed border-slate-200 hover:border-purple-500 hover:bg-purple-50/50 transition-all duration-300 text-center h-full"
+                                className="group flex flex-col items-center gap-6 p-8 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50/50 transition-all duration-300 text-center h-full"
                             >
                                 <div className="h-16 w-16 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <Mic className="h-8 w-8" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-2">Start Live Call</h3>
-                                    <p className="text-sm text-slate-500 leading-relaxed">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-2">Start Live Call</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                                         Real-time transcription and AI assistance during the call.
                                     </p>
                                 </div>
@@ -133,14 +133,14 @@ function CreateTicketContent() {
                             {/* Manual Entry Option */}
                             <button
                                 onClick={() => setViewState("manual-entry")}
-                                className="group flex flex-col items-center gap-6 p-8 bg-white rounded-3xl border-2 border-dashed border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all duration-300 text-center h-full"
+                                className="group flex flex-col items-center gap-6 p-8 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all duration-300 text-center h-full"
                             >
                                 <div className="h-16 w-16 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <PenLine className="h-8 w-8" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-2">Add New Ticket</h3>
-                                    <p className="text-sm text-slate-500 leading-relaxed">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-2">Add New Ticket</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                                         Manually enter ticket details without AI assistance.
                                     </p>
                                 </div>
@@ -153,7 +153,7 @@ function CreateTicketContent() {
                     <div className="animate-in fade-in zoom-in-95 duration-500 space-y-6">
                         <button
                             onClick={() => setViewState("selection")}
-                            className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-2"
+                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-50 flex items-center gap-2"
                         >
                             ← Back to options
                         </button>
@@ -165,7 +165,7 @@ function CreateTicketContent() {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
                         <button
                             onClick={() => setViewState("selection")}
-                            className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-2"
+                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-50 flex items-center gap-2"
                         >
                             ← Back to options
                         </button>
@@ -186,7 +186,7 @@ function CreateTicketContent() {
                     <div className="animate-in fade-in zoom-in-95 duration-500 space-y-6">
                         <button
                             onClick={() => setViewState("selection")}
-                            className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-2"
+                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-50 flex items-center gap-2"
                         >
                             ← Back to options
                         </button>

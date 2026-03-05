@@ -72,7 +72,7 @@ export default function Dashboard() {
       text: type === "text" ? text : `Sent a ${type} note`,
       platform: "internal",
       timestamp: "Just now",
-      avatarColor: "bg-slate-100 text-slate-700",
+      avatarColor: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
       type: type
     };
     setMessages([newMessage, ...messages]);
@@ -86,21 +86,21 @@ export default function Dashboard() {
     <div className="flex flex-col gap-8 pb-8">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-sm text-slate-500 mb-1">Total Tickets</div>
-          <div className="text-2xl font-bold text-slate-900">{stats.totalTickets}</div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Tickets</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{stats.totalTickets}</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-sm text-slate-500 mb-1">Avg. Resolution</div>
-          <div className="text-2xl font-bold text-slate-900">{stats.avgResolution}</div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Avg. Resolution</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{stats.avgResolution}</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-sm text-slate-500 mb-1">Customer Satisfaction</div>
-          <div className="text-2xl font-bold text-slate-900">{stats.customerSatisfaction}</div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Customer Satisfaction</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{stats.customerSatisfaction}</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <div className="text-sm text-slate-500 mb-1">Pending Actions</div>
-          <div className="text-2xl font-bold text-slate-900">{stats.pendingActions}</div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Pending Actions</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{stats.pendingActions}</div>
         </div>
       </div>
 
@@ -112,23 +112,23 @@ export default function Dashboard() {
             <MessageFeed messages={messages} onDismiss={handleDismiss} />
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
-              <h3 className="font-semibold text-slate-900">Recent Activity</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-50">Recent Activity</h3>
               <Link href="/tickets" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
                 View All <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="divide-y divide-slate-100 overflow-y-auto flex-1">
               {tickets.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 text-sm">
+                <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                   No recent tickets found.
                 </div>
               ) : (
                 tickets.map((ticket) => (
-                  <Link href={`/tickets/${ticket.id}`} key={ticket.id} className="block px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+                  <Link href={`/tickets/${ticket.id}`} key={ticket.id} className="block px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-colors cursor-pointer group">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-medium text-slate-500">{ticket.id}</span>
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{ticket.id}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${ticket.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100' :
                         ticket.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-100' :
                           'bg-blue-50 text-blue-700 border-blue-100'
@@ -136,10 +136,10 @@ export default function Dashboard() {
                         {ticket.priority}
                       </span>
                     </div>
-                    <h4 className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                    <h4 className="text-sm font-medium text-slate-900 dark:text-slate-50 group-hover:text-indigo-600 transition-colors truncate">
                       {ticket.summary}
                     </h4>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
                       <span>{ticket.contact}</span>
                       <span>•</span>
                       <span>{ticket.timeSpent}</span>
@@ -159,7 +159,7 @@ export default function Dashboard() {
             <p className="text-indigo-200 text-sm mb-6">
               3 emerging trends identified today.
             </p>
-            <button className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg py-2 text-sm font-medium transition-colors">
+            <button className="w-full bg-white dark:bg-slate-900/10 hover:bg-white dark:bg-slate-900/20 text-white border border-white/20 rounded-lg py-2 text-sm font-medium transition-colors">
               View Insights
             </button>
           </div>

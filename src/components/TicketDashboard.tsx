@@ -195,16 +195,16 @@ export function TicketDashboard({ data }: { data: TicketData }) {
             className="w-full max-w-4xl mx-auto space-y-6"
         >
             {/* Header Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-2xl font-bold text-slate-900">Ticket #{data.id}</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Ticket #{data.id}</h2>
                         <span className={cn(
                             "px-2.5 py-0.5 rounded-full text-xs font-medium border",
                             data.status === "open" ? "bg-blue-50 text-blue-700 border-blue-200" :
                                 data.status === "in-progress" ? "bg-amber-50 text-amber-700 border-amber-200" :
                                     data.status === "resolved" ? "bg-green-50 text-green-700 border-green-200" :
-                                        "bg-slate-50 text-slate-700 border-slate-200"
+                                        "bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                         )}>
                             {data.status.replace('-', ' ').toUpperCase()}
                         </span>
@@ -217,7 +217,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                             {data.priority.toUpperCase()} Priority
                         </span>
                     </div>
-                    <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                    <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
                         <div className="flex items-center gap-1.5">
                             <User className="h-4 w-4" />
                             {data.contact}
@@ -252,14 +252,14 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                         "flex items-center gap-2 px-4 py-2 rounded-lg border",
                         data.sentiment === "positive" ? "bg-green-50 border-green-100 text-green-700" :
                             data.sentiment === "negative" ? "bg-red-50 border-red-100 text-red-700" :
-                                "bg-slate-50 border-slate-100 text-slate-700"
+                                "bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                     )}>
                         {data.sentiment === "positive" ? <ThumbsUp className="h-4 w-4" /> :
                             data.sentiment === "negative" ? <ThumbsDown className="h-4 w-4" /> :
                                 <div className="h-4 w-4 rounded-full border-2 border-current" />}
                         <span className="font-medium capitalize">{data.sentiment} Sentiment</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                         <span className="font-medium">Assignee:</span>
                         <div className="flex items-center gap-1.5">
                             <div className="h-5 w-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
@@ -268,7 +268,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                             {data.assignee}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                         <span className="font-medium">Time Spent:</span>
                         <span>{data.timeSpent}</span>
                     </div>
@@ -302,26 +302,26 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                     </section>
 
                     {/* Summary */}
-                    <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
                             <FileTextIcon className="h-5 w-5 text-indigo-600" />
                             {data.topic}
                         </h3>
-                        <p className="text-slate-600 leading-relaxed">
+                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                             {data.summary}
                         </p>
                     </section>
 
                     {/* Key Issues & Causes */}
                     <div className="grid grid-cols-1 gap-6">
-                        <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
                                 <AlertCircle className="h-5 w-5 text-amber-600" />
                                 Key Issues Identified
                             </h3>
                             <ul className="space-y-3">
                                 {data.keyIssues.map((issue, i) => (
-                                    <li key={i} className="flex items-start gap-3 text-slate-700">
+                                    <li key={i} className="flex items-start gap-3 text-slate-700 dark:text-slate-300">
                                         <span className="flex-shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
                                         {issue}
                                     </li>
@@ -329,14 +329,14 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                             </ul>
                         </section>
 
-                        <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
                                 <BrainIcon className="h-5 w-5 text-purple-600" />
                                 Potential Causes
                             </h3>
                             <ul className="space-y-3">
                                 {data.potentialCauses.map((cause, i) => (
-                                    <li key={i} className="flex items-start gap-3 text-slate-700">
+                                    <li key={i} className="flex items-start gap-3 text-slate-700 dark:text-slate-300">
                                         <span className="flex-shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full bg-purple-500" />
                                         {cause}
                                     </li>
@@ -399,7 +399,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                                     <h3 className="text-sm font-semibold text-indigo-900 mb-3 uppercase tracking-wider">Ask the User</h3>
                                     <ul className="space-y-3">
                                         {data.followUpQuestions.map((q, i) => (
-                                            <li key={i} className="bg-white p-3 rounded-xl shadow-sm border border-indigo-100 text-sm text-slate-700">
+                                            <li key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-indigo-100 text-sm text-slate-700 dark:text-slate-300">
                                                 {q}
                                             </li>
                                         ))}
@@ -430,7 +430,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                                 <div
                                     key={action.id}
                                     className={cn(
-                                        "group flex gap-3 items-start bg-white p-3 rounded-lg shadow-sm border transition-all",
+                                        "group flex gap-3 items-start bg-white dark:bg-slate-900 p-3 rounded-lg shadow-sm border transition-all",
                                         action.completed ? "border-indigo-100 opacity-75" : "border-indigo-100/50 hover:border-indigo-300",
                                         deletingActionId === action.id && "border-red-200 bg-red-50",
                                         action.isNextAction && "ring-1 ring-indigo-400 border-indigo-400"
@@ -450,7 +450,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                                             <div className="flex gap-2 justify-end">
                                                 <button
                                                     onClick={() => setDeletingActionId(null)}
-                                                    className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1"
+                                                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 px-2 py-1"
                                                 >
                                                     Cancel
                                                 </button>
@@ -471,7 +471,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                                                         "h-5 w-5 rounded border-2 flex items-center justify-center transition-colors",
                                                         action.completed
                                                             ? "bg-indigo-600 border-indigo-600 text-white"
-                                                            : "border-indigo-200 hover:border-indigo-400 bg-white"
+                                                            : "border-indigo-200 hover:border-indigo-400 bg-white dark:bg-slate-900"
                                                     )}
                                                 >
                                                     {action.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
@@ -493,14 +493,14 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                                                             value={editActionReason}
                                                             onChange={(e) => setEditActionReason(e.target.value)}
                                                             placeholder="Reason for change (optional)"
-                                                            className="w-full text-xs text-slate-500 border-b border-indigo-100 focus:outline-none focus:border-indigo-400 bg-transparent"
+                                                            className="w-full text-xs text-slate-500 dark:text-slate-400 border-b border-indigo-100 focus:outline-none focus:border-indigo-400 bg-transparent"
                                                             onKeyDown={(e) => {
                                                                 if (e.key === 'Enter') saveEdit();
                                                                 if (e.key === 'Escape') setEditingActionId(null);
                                                             }}
                                                         />
                                                         <div className="flex justify-end gap-2">
-                                                            <button onClick={() => setEditingActionId(null)} className="text-xs text-slate-400 hover:text-slate-600">Cancel</button>
+                                                            <button onClick={() => setEditingActionId(null)} className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-400">Cancel</button>
                                                             <button onClick={saveEdit} className="text-xs text-green-600 font-medium">Save</button>
                                                         </div>
                                                     </div>

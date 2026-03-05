@@ -45,7 +45,7 @@ export function AnalysisLoader({ onComplete }: { onComplete: () => void }) {
                 />
 
                 {/* Center Icon */}
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-white shadow-xl ring-1 ring-slate-100">
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 shadow-xl ring-1 ring-slate-100">
                     <motion.div
                         key={currentStep}
                         initial={{ scale: 0.5, opacity: 0 }}
@@ -61,7 +61,7 @@ export function AnalysisLoader({ onComplete }: { onComplete: () => void }) {
             </div>
 
             <div className="space-y-4 text-center">
-                <h3 className="text-xl font-semibold text-slate-900 min-w-[250px]">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50 min-w-[250px]">
                     {steps[currentStep].text}
                 </h3>
 

@@ -63,7 +63,7 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
             case "call": return "bg-blue-100 text-blue-600 border-blue-200";
             case "message": return "bg-indigo-100 text-indigo-600 border-indigo-200";
             case "file": return "bg-amber-100 text-amber-600 border-amber-200";
-            case "log": return "bg-slate-100 text-slate-600 border-slate-200";
+            case "log": return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
             case "status_change": return "bg-green-100 text-green-600 border-green-200";
             case "note": return "bg-yellow-50 text-yellow-600 border-yellow-200";
             default: return "bg-gray-100 text-gray-600 border-gray-200";
@@ -71,13 +71,13 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-slate-500" />
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     Activity Log
                 </h3>
-                <span className="text-xs text-slate-500 font-medium px-2 py-1 bg-white rounded-md border border-slate-200">
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium px-2 py-1 bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700">
                     {activities.length} Events
                 </span>
             </div>
@@ -98,13 +98,13 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
                             </div>
 
                             {/* Content Card */}
-                            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-semibold text-slate-900 text-sm">{activity.author}</span>
+                                        <span className="font-semibold text-slate-900 dark:text-slate-50 text-sm">{activity.author}</span>
                                         <span className="text-xs text-slate-400">• {activity.timestamp}</span>
                                     </div>
-                                    <button className="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button className="text-slate-400 hover:text-slate-600 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <MoreHorizontal className="h-4 w-4" />
                                     </button>
                                 </div>
@@ -114,9 +114,9 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
                                         <code>{activity.content}</code>
                                     </div>
                                 ) : activity.type === 'status_change' ? (
-                                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                                         <span>Changed status from</span>
-                                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
+                                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium border border-slate-200 dark:border-slate-700">
                                             {activity.metadata?.oldStatus?.toUpperCase()}
                                         </span>
                                         <span>to</span>
@@ -125,19 +125,19 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
                                         </span>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
                                         {activity.content}
                                     </p>
                                 )}
 
                                 {activity.metadata?.fileUrl && (
-                                    <div className="mt-3 flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                                        <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center border border-slate-200 text-slate-500">
+                                    <div className="mt-3 flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                                        <div className="h-8 w-8 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
                                             <FileText className="h-4 w-4" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-700 truncate">Attached File</p>
-                                            <p className="text-xs text-slate-500">{activity.metadata.fileType}</p>
+                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">Attached File</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{activity.metadata.fileType}</p>
                                         </div>
                                         <a href="#" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">Download</a>
                                     </div>
@@ -149,14 +149,14 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
             </div>
 
             {/* Action Bar */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
                 <div className="flex gap-2">
                     <div className="flex-1 relative">
                         <textarea
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="Reply or add a note..."
-                            className="w-full pl-4 pr-12 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm shadow-sm"
+                            className="w-full pl-4 pr-12 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm shadow-sm"
                             rows={1}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -181,15 +181,15 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
                     </button>
                 </div>
                 <div className="flex gap-4 mt-3 px-1">
-                    <button className="text-xs font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
+                    <button className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
                         <User className="h-3.5 w-3.5" />
                         Assign
                     </button>
-                    <button className="text-xs font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
+                    <button className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Close Ticket
                     </button>
-                    <button className="text-xs font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
+                    <button className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
                         <AlertCircle className="h-3.5 w-3.5" />
                         Escalate
                     </button>

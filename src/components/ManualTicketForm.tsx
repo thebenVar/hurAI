@@ -155,23 +155,23 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
         { id: "training", label: "Training", icon: GraduationCap, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
         { id: "logistics", label: "Logistics", icon: Truck, color: "text-amber-600 bg-amber-50 border-amber-200" },
         { id: "software", label: "Software", icon: AppWindow, color: "text-purple-600 bg-purple-50 border-purple-200" },
-        { id: "hardware", label: "Hardware", icon: Monitor, color: "text-slate-600 bg-slate-50 border-slate-200" },
+        { id: "hardware", label: "Hardware", icon: Monitor, color: "text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" },
         { id: "network", label: "Network", icon: Wifi, color: "text-cyan-600 bg-cyan-50 border-cyan-200" },
         { id: "access", label: "Access", icon: Key, color: "text-rose-600 bg-rose-50 border-rose-200" },
         { id: "other", label: "Other", icon: Tag, color: "text-gray-600 bg-gray-50 border-gray-200" },
     ];
 
     return (
-        <div className="w-full max-w-7xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden flex flex-col md:flex-row h-[85vh]">
+        <div className="w-full max-w-7xl mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col md:flex-row h-[85vh]">
             {/* Sidebar - Meta Data */}
-            <div className="w-full md:w-80 bg-slate-50 border-r border-slate-200 p-6 flex flex-col gap-8 overflow-y-auto shrink-0">
+            <div className="w-full md:w-80 bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-700 p-6 flex flex-col gap-8 overflow-y-auto shrink-0">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900 mb-6">New Ticket</h2>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-6">New Ticket</h2>
 
                     <div className="space-y-6">
                         {/* Status */}
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Status</label>
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</label>
                             <div className="flex flex-wrap gap-2">
                                 {["open", "in-progress", "resolved", "closed"].map((s) => (
                                     <button
@@ -182,7 +182,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                                             "px-3 py-1.5 rounded-lg text-xs font-medium capitalize border transition-all",
                                             formData.status === s
                                                 ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
-                                                : "bg-white text-slate-700 border-slate-300 hover:border-indigo-400"
+                                                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-indigo-400"
                                         )}
                                     >
                                         {s.replace("-", " ")}
@@ -193,8 +193,8 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
 
                         {/* Priority */}
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Priority</label>
-                            <div className="flex gap-2 bg-white p-1 rounded-xl border border-slate-200">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Priority</label>
+                            <div className="flex gap-2 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                                 {["low", "medium", "high"].map((p) => (
                                     <button
                                         key={p}
@@ -206,7 +206,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                                                 ? p === "high" ? "bg-red-100 text-red-700 shadow-sm" :
                                                     p === "medium" ? "bg-amber-100 text-amber-700 shadow-sm" :
                                                         "bg-green-100 text-green-700 shadow-sm"
-                                                : "text-slate-600 hover:bg-slate-100"
+                                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800"
                                         )}
                                     >
                                         {p}
@@ -217,8 +217,8 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
 
                         {/* Sentiment */}
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Customer Sentiment</label>
-                            <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Customer Sentiment</label>
+                            <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                                 {["negative", "neutral", "positive"].map((s, idx) => (
                                     <button
                                         key={s}
@@ -229,8 +229,8 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                                             formData.sentiment === s
                                                 ? s === "positive" ? "bg-green-100 text-green-600 ring-2 ring-green-500 ring-offset-2" :
                                                     s === "negative" ? "bg-red-100 text-red-600 ring-2 ring-red-500 ring-offset-2" :
-                                                        "bg-slate-100 text-slate-600 ring-2 ring-slate-500 ring-offset-2"
-                                                : "text-slate-400 hover:bg-slate-50"
+                                                        "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 ring-2 ring-slate-500 ring-offset-2"
+                                                : "text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                                         )}
                                     >
                                         {s === "positive" ? "😊" : s === "negative" ? "😠" : "😐"}
@@ -241,12 +241,12 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
 
                         {/* Assignee */}
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Assignee</label>
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Assignee</label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <input
                                     type="text"
-                                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white text-sm text-slate-900 placeholder:text-slate-400"
+                                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                     placeholder="Assign to..."
                                     value={formData.assignee}
                                     onChange={e => setFormData({ ...formData, assignee: e.target.value })}
@@ -256,12 +256,12 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
 
                         {/* Time Spent */}
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Time Spent</label>
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Time Spent</label>
                             <div className="relative">
                                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <input
                                     type="text"
-                                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white text-sm text-slate-900 placeholder:text-slate-400"
+                                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                     placeholder="e.g. 15m"
                                     value={formData.timeSpent}
                                     onChange={e => setFormData({ ...formData, timeSpent: e.target.value })}
@@ -271,10 +271,10 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                     </div>
                 </div>
 
-                <div className="mt-auto pt-6 border-t border-slate-200 flex gap-3">
+                <div className="mt-auto pt-6 border-t border-slate-200 dark:border-slate-700 flex gap-3">
                     <button
                         onClick={onCancel}
-                        className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm rounded-xl border border-transparent hover:border-slate-200 transition-all"
+                        className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-white dark:bg-slate-900 hover:shadow-sm rounded-xl border border-transparent hover:border-slate-200 dark:border-slate-700 transition-all"
                     >
                         Cancel
                     </button>
@@ -290,7 +290,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
 
             {/* Agent Assist Panel (New) */}
             {(formData.isUserSolvable !== undefined || (formData.followUpQuestions && formData.followUpQuestions.length > 0)) && (
-                <div className="hidden lg:flex w-72 bg-indigo-50/50 border-r border-slate-200 p-6 flex-col gap-6 shrink-0">
+                <div className="hidden lg:flex w-72 bg-indigo-50/50 border-r border-slate-200 dark:border-slate-700 p-6 flex-col gap-6 shrink-0">
                     <div className="flex items-center gap-2 text-indigo-900 font-bold">
                         <Star className="h-5 w-5 text-indigo-600" />
                         <h2>Agent Assist</h2>
@@ -329,7 +329,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                             <h3 className="text-sm font-semibold text-indigo-900 mb-3 uppercase tracking-wider">Ask the User</h3>
                             <ul className="space-y-3">
                                 {formData.followUpQuestions.map((q, i) => (
-                                    <li key={i} className="bg-white p-3 rounded-xl shadow-sm border border-indigo-100 text-sm text-slate-700">
+                                    <li key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-indigo-100 text-sm text-slate-700 dark:text-slate-300">
                                         {q}
                                     </li>
                                 ))}
@@ -340,23 +340,23 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
             )}
 
             {/* Main Content */}
-            <div className="flex-1 p-8 overflow-y-auto bg-white">
+            <div className="flex-1 p-8 overflow-y-auto bg-white dark:bg-slate-900">
                 <div className="max-w-3xl mx-auto space-y-8">
                     {/* Contact & Source */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Contact Name</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Contact Name</label>
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-slate-50 focus:bg-white text-lg font-medium text-slate-900 placeholder:text-slate-400"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-slate-50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 text-lg font-medium text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                 placeholder="Who is calling?"
                                 value={formData.contact}
                                 onChange={e => setFormData({ ...formData, contact: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Source</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Source</label>
                             <div className="flex gap-2">
                                 {["phone", "email", "whatsapp", "other"].map((src) => (
                                     <button
@@ -367,7 +367,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                                             "flex-1 py-3 rounded-xl border transition-all flex items-center justify-center",
                                             formData.source === src
                                                 ? "bg-indigo-50 border-indigo-200 text-indigo-600"
-                                                : "bg-white border-slate-300 text-slate-500 hover:border-indigo-300 hover:text-indigo-600"
+                                                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-indigo-300 hover:text-indigo-600"
                                         )}
                                         title={src}
                                     >
@@ -383,7 +383,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
 
                     {/* Category Grid */}
                     <div className="space-y-3">
-                        <label className="text-sm font-medium text-slate-700">Category</label>
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {categories.map((cat) => (
                                 <button
@@ -394,7 +394,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                                         "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:scale-[1.02]",
                                         formData.category === cat.id
                                             ? cn("ring-2 ring-offset-2 ring-indigo-500", cat.color)
-                                            : "bg-white border-slate-300 text-slate-600 hover:border-indigo-400 hover:bg-slate-50 hover:text-slate-800"
+                                            : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200"
                                     )}
                                 >
                                     <cat.icon className="h-6 w-6" />
@@ -404,7 +404,7 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                         </div>
                         {formData.subCategory && (
                             <div className="mt-3 flex items-center gap-2">
-                                <span className="text-xs font-medium text-slate-500">Suggested Sub-category:</span>
+                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Suggested Sub-category:</span>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                                     {formData.subCategory}
                                 </span>
@@ -415,11 +415,11 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                     {/* Topic & Summary */}
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Topic</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Topic</label>
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-slate-50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                 placeholder="What is this about?"
                                 value={formData.topic}
                                 onChange={e => setFormData({ ...formData, topic: e.target.value })}
@@ -427,11 +427,11 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Summary</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Summary</label>
                             <textarea
                                 required
                                 rows={4}
-                                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none bg-slate-50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                 placeholder="Describe the issue in detail..."
                                 value={formData.summary}
                                 onChange={e => setFormData({ ...formData, summary: e.target.value })}
@@ -442,30 +442,30 @@ export function ManualTicketForm({ onSubmit, onCancel, initialData }: ManualTick
                     {/* Details Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Key Issues</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Key Issues</label>
                             <textarea
                                 rows={4}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm text-slate-900 placeholder:text-slate-400"
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                 placeholder="- Issue 1..."
                                 value={tempIssues}
                                 onChange={e => setTempIssues(e.target.value)}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Potential Causes</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Potential Causes</label>
                             <textarea
                                 rows={4}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm text-slate-900 placeholder:text-slate-400"
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                 placeholder="- Cause 1..."
                                 value={tempCauses}
                                 onChange={e => setTempCauses(e.target.value)}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Action Points</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Action Points</label>
                             <textarea
                                 rows={4}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm text-slate-900 placeholder:text-slate-400"
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none text-sm text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
                                 placeholder="- Action 1..."
                                 value={tempActions}
                                 onChange={e => setTempActions(e.target.value)}

@@ -17,11 +17,11 @@ export default async function TicketDetailsPage({ params }: PageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-8">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-800/50 p-8">
             <div className="max-w-4xl mx-auto space-y-6">
                 <Link
                     href="/"
-                    className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Dashboard
