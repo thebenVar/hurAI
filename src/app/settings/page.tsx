@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getAiConfiguration, saveAiConfiguration, type AiConfiguration } from "@/app/actions/settings";
 import { useTheme } from "next-themes";
+import { signOut } from "next-auth/react";
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState("general");
@@ -114,7 +115,10 @@ export default function SettingsPage() {
                         </nav>
 
                         <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700 px-3">
-                            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                            >
                                 <LogOut className="h-4 w-4" />
                                 Sign Out
                             </button>
