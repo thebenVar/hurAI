@@ -7,7 +7,7 @@ import { AnalysisLoader } from "@/components/AnalysisLoader";
 import { TicketDashboard, type TicketData } from "@/components/TicketDashboard";
 import { ManualTicketForm } from "@/components/ManualTicketForm";
 import { generateTicketDetails } from "@/app/actions/llm";
-import { createTicket } from "@/app/actions/tickets";
+import { createTicket, updateTicketAiFields } from "@/app/actions/tickets";
 import { LiveCallAssistant } from "@/components/LiveCallAssistant";
 import { Headset, Sparkles, PenLine, Mic, Building2 } from "lucide-react";
 
@@ -86,8 +86,28 @@ function CreateTicketContent() {
     const handleManualSubmit = async (data: TicketData) => {
         try {
             const result = await createTicket(data, selectedDeptId || undefined);
-            if (result.success) {
+            if (result.success && result.ticketId) {
+                // Navigate immediately — don't block on AI analysis
                 router.push(`/tickets/${result.ticketId}`);
+
+                // Run LLM analysis in the background and update ticket
+                const analysisText = `Topic: ${data.topic}\n\n${data.summary}`;
+                generateTicketDetails(analysisText).then(async (aiData) => {
+                    if (aiData && result.ticketId) {
+                        await updateTicketAiFields(result.ticketId, {
+                            category: aiData.category,
+                            subCategory: aiData.subCategory,
+                            priority: aiData.priority,
+                            sentiment: aiData.sentiment,
+                            isUserSolvable: aiData.isUserSolvable,
+                            userSolvableReason: aiData.userSolvableReason,
+                            followUpQuestions: aiData.followUpQuestions,
+                            suggestedActions: aiData.suggestedActions,
+                            keyIssues: aiData.keyIssues,
+                            potentialCauses: aiData.potentialCauses,
+                        });
+                    }
+                }).catch(e => console.error("AI analysis failed silently:", e));
             } else {
                 console.error("Failed to create ticket:", result.error);
             }

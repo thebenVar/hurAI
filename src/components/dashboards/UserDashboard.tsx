@@ -79,7 +79,9 @@ export function UserDashboard() {
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                    <span className="font-mono">ID: {ticket.id.slice(0, 8)}</span>
+                                    <span className="font-mono">
+                                        {ticket.ticketNumber ? `#TKT-${ticket.ticketNumber.toString().padStart(3, '0')}` : `#${ticket.id.slice(0, 8)}`}
+                                    </span>
                                     <span>•</span>
                                     <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
                                     <span>•</span>

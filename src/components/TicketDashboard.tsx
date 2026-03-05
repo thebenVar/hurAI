@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
     CheckCircle2,
@@ -24,25 +24,40 @@ import {
     ArrowRight,
     X,
     Plus,
-    Star
+    Star,
+    Sparkles,
+    Loader2,
+    Brain,
+    FileText as FileTextIcon,
+    Trash2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TicketActivity, ActivityItem } from "./TicketActivity";
 import { KnowledgeBaseSuggestions, KBArticle } from "./KnowledgeBaseSuggestions";
-import { addActivityLog, escalateTicket, updateSatisfaction, toggleActionPoint } from "@/app/actions/tickets";
+import {
+    addActivityLog,
+    escalateTicket,
+    updateSatisfaction,
+    toggleActionPoint,
+    updateTicketAiFields,
+    softDeleteTicket
+} from "@/app/actions/tickets";
+import { generateTicketDetails } from "@/app/actions/llm";
+import { getAiConfiguration } from "@/app/actions/settings";
 import { useRouter } from "next/navigation";
 
 export interface TicketData {
     id: string;
     contact: string;
-    source: "phone" | "email" | "whatsapp" | "in-person" | "other";
+    source: "phone" | "email" | "whatsapp" | "in-person" | "web" | "other";
     duration: string;
     topic: string;
     sentiment: "positive" | "neutral" | "negative";
     priority: "low" | "medium" | "high";
     summary: string;
+    aiSummary?: string; // LLM-generated executive summary
     keyIssues: string[];
     actionPoints: { id: string; text: string; completed: boolean; isNextAction?: boolean }[];
     potentialCauses: string[];
@@ -55,9 +70,10 @@ export interface TicketData {
     satisfactionScore?: number | null;
 
     assignee: string;
-    status: "open" | "in-progress" | "resolved" | "closed";
+    status: "open" | "in-progress" | "resolved" | "closed" | "deleted";
     category: "hardware" | "software" | "network" | "access" | "translation" | "training" | "logistics" | "other";
     timeSpent: string;
+    ticketNumber?: number;
     activityLog: ActivityItem[];
     kbMatches: KBArticle[];
 }
@@ -68,6 +84,129 @@ export function TicketDashboard({ data }: { data: TicketData }) {
     // Local state
     const [actions, setActions] = useState(data.actionPoints);
     const [activities, setActivities] = useState(data.activityLog);
+    const [keyIssues, setKeyIssues] = useState<string[]>(data.keyIssues);
+    const [potentialCauses, setPotentialCauses] = useState<string[]>(data.potentialCauses);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+    const [selectedModel, setSelectedModel] = useState<string>("Gemini 1.5 Flash");
+    const [availableModels, setAvailableModels] = useState<string[]>(["Gemini 1.5 Flash"]);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [userRole, setUserRole] = useState<string>("guest");
+
+    // Fetch session/role and models on mount
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                // We'll get user info from a separate action or just check local storage/context if available
+                // For now, let's assume we can fetch it or it's passed down. 
+                // Since this is a client component, we should probably fetch the session.
+                const res = await fetch('/api/auth/session');
+                const session = await res.json();
+                if (session?.user?.role) setUserRole(session.user.role);
+
+                const config = await getAiConfiguration();
+                const models = [];
+                if (config.geminiKey) {
+                    models.push("Gemini 1.5 Flash");
+                    models.push("Gemini 1.5 Pro");
+                }
+                if (config.openAiKey) {
+                    models.push("GPT-4o");
+                    models.push("GPT-3.5 Turbo");
+                }
+                if (config.anthropicKey) {
+                    models.push("Claude 3.5 Sonnet");
+                }
+
+                if (models.length > 0) {
+                    setAvailableModels(models);
+                    // Use the default model from config if it matches one of our patterns
+                    if (config.defaultModel && models.includes(config.defaultModel)) {
+                        setSelectedModel(config.defaultModel);
+                    } else {
+                        setSelectedModel(models[0]);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load model availability:", err);
+            }
+        };
+        loadInitialData();
+    }, []);
+
+    const handleSoftDelete = async () => {
+        setIsDeleting(true);
+        const res = await softDeleteTicket(data.id);
+        if (res.success) {
+            router.push('/tickets'); // Redirect to list after delete
+            router.refresh();
+        } else {
+            alert(res.error || "Failed to delete ticket");
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
+    const formattedTicketId = data.ticketNumber
+        ? `#TKT-${data.ticketNumber.toString().padStart(3, '0')}`
+        : `#${data.id.substring(0, 8)}...`;
+
+    // Key Issues CRUD state
+    const [newIssueText, setNewIssueText] = useState("");
+    const [editingIssueIdx, setEditingIssueIdx] = useState<number | null>(null);
+    const [editIssueText, setEditIssueText] = useState("");
+
+    // Potential Causes CRUD state
+    const [newCauseText, setNewCauseText] = useState("");
+    const [editingCauseIdx, setEditingCauseIdx] = useState<number | null>(null);
+    const [editCauseText, setEditCauseText] = useState("");
+
+    // Manual AI Analysis trigger
+    const handleAnalyzeWithAI = async () => {
+        if (isAnalyzing) return;
+        setIsAnalyzing(true);
+        setAnalyzeError(null);
+        try {
+            const analysisText = `Topic: ${data.topic}\n\n${data.summary}`;
+            const aiData = await generateTicketDetails(analysisText, selectedModel);
+            if (aiData) {
+                await updateTicketAiFields(data.id, {
+                    aiSummary: aiData.summary,
+                    category: aiData.category,
+                    subCategory: aiData.subCategory,
+                    priority: aiData.priority,
+                    sentiment: aiData.sentiment,
+                    isUserSolvable: aiData.isUserSolvable,
+                    userSolvableReason: aiData.userSolvableReason,
+                    followUpQuestions: aiData.followUpQuestions,
+                    suggestedActions: aiData.suggestedActions,
+                    keyIssues: aiData.keyIssues,
+                    potentialCauses: aiData.potentialCauses,
+                });
+                // Update local UI state immediately without page reload
+                setKeyIssues(aiData.keyIssues);
+                setPotentialCauses(aiData.potentialCauses);
+                if (aiData.suggestedActions?.length) {
+                    const newAPs = aiData.suggestedActions.map((text, i) => ({
+                        id: `ai-${Date.now()}-${i}`,
+                        text,
+                        completed: false,
+                        isNextAction: false
+                    }));
+                    setActions(prev => [...prev, ...newAPs]);
+                }
+                logActivity("log", "AI analysis completed — suggestions updated.");
+                router.refresh(); // Reload to get aiSummary in Quick Insight
+            } else {
+                setAnalyzeError("AI analysis failed. Please try again.");
+            }
+        } catch (err) {
+            setAnalyzeError("Error running analysis. Check your API key.");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
 
     // Action Point UI State
     const [newActionText, setNewActionText] = useState("");
@@ -219,7 +358,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                 setActions(prev => prev.map(a =>
                     a.id === editingActionId ? { ...a, text: editActionText } : a
                 ));
-                logActivity("log", `Updated action point: '${action.text}' → '${editActionText}'`, editActionReason);
+                logActivity("log", `Updated action point: '${action.text}' â†’ '${editActionText}'`, editActionReason);
             }
             setEditingActionId(null);
             setEditActionText("");
@@ -240,7 +379,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Ticket #{data.id}</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">{formattedTicketId}</h2>
                         <span className={cn(
                             "px-2.5 py-0.5 rounded-full text-xs font-medium border",
                             data.status === "open" ? "bg-blue-50 text-blue-700 border-blue-200" :
@@ -320,27 +459,73 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                         <span className="font-medium">Time Spent:</span>
                         <span>{data.timeSpent}</span>
                     </div>
+
+                    {(userRole === 'admin' || userRole === 'super_admin') && (
+                        <div className="mt-2">
+                            <button
+                                onClick={() => setShowDeleteConfirm(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Delete Ticket
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-xl border border-slate-200 dark:border-slate-800"
+                    >
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-2">Delete Ticket?</h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+                            This will remove the ticket from all active views. It can be restored by an administrator if needed.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSoftDelete}
+                                disabled={isDeleting}
+                                className="px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-xl transition-colors shadow-lg shadow-red-200 dark:shadow-none flex items-center gap-2"
+                            >
+                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Main Content */}
                 <div className="md:col-span-2 space-y-6">
                     {/* Quick Insight Card */}
-                    <section className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100">
+                    <section className="bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-800/30">
                         <div className="flex items-start gap-4">
-                            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shrink-0">
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0">
                                 <Lightbulb className="h-5 w-5" />
                             </div>
                             <div className="space-y-3 flex-1">
                                 <div>
-                                    <h3 className="font-semibold text-indigo-900">Quick Insight</h3>
-                                    <p className="text-sm text-indigo-700/80 mt-1 leading-relaxed">
-                                        {data.summary}
+                                    <h3 className="font-semibold text-indigo-900 dark:text-indigo-300">Quick Insight</h3>
+                                    <p className="text-sm text-indigo-700/80 dark:text-indigo-300/70 mt-1 leading-relaxed">
+                                        {data.aiSummary || data.summary}
                                     </p>
+                                    {!data.aiSummary && (
+                                        <p className="text-xs text-indigo-400 mt-2 italic">AI summary pending â€” showing user description</p>
+                                    )}
                                 </div>
                                 {nextAction && (
-                                    <div className="flex items-center gap-2 text-sm font-medium text-indigo-700 bg-indigo-100/50 px-3 py-2 rounded-lg w-fit">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-100/50 dark:bg-indigo-900/30 px-3 py-2 rounded-lg w-fit">
                                         <ArrowRight className="h-4 w-4" />
                                         <span>Next Action: {nextAction.text}</span>
                                     </div>
@@ -360,55 +545,181 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                         </p>
                     </section>
 
-                    {/* Key Issues & Causes */}
-                    <div className="grid grid-cols-1 gap-6">
-                        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
-                                <AlertCircle className="h-5 w-5 text-amber-600" />
-                                Key Issues Identified
-                            </h3>
-                            <ul className="space-y-3">
-                                {data.keyIssues.map((issue, i) => (
-                                    <li key={i} className="flex items-start gap-3 text-slate-700 dark:text-slate-300">
-                                        <span className="flex-shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                        {issue}
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
 
-                        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
-                                <BrainIcon className="h-5 w-5 text-purple-600" />
-                                Potential Causes
-                            </h3>
-                            <ul className="space-y-3">
-                                {data.potentialCauses.map((cause, i) => (
-                                    <li key={i} className="flex items-start gap-3 text-slate-700 dark:text-slate-300">
-                                        <span className="flex-shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full bg-purple-500" />
-                                        {cause}
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
-
-                        {/* Activity Log */}
-                        <section className="h-[600px]">
-                            <TicketActivity
-                                activities={activities}
-                                onAddActivity={handleAddActivity}
-                                onEscalate={handleEscalate}
-                                onClose={handleClose}
-                            />
-                        </section>
-                    </div>
+                    {/* Activity Log */}
+                    <section className="h-[600px]">
+                        <TicketActivity
+                            activities={activities}
+                            suggestions={data.followUpQuestions}
+                            onAddActivity={handleAddActivity}
+                            onEscalate={handleEscalate}
+                            onClose={handleClose}
+                        />
+                    </section>
                 </div>
 
                 {/* Sidebar */}
-                <div className="space-y-6">
+                <div className="md:col-span-1 space-y-6">
+
+                    {/* Analyze with AI Button */}
+                    <section className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="h-4 w-4 text-indigo-500" />
+                                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">AI Analysis</span>
+                            </div>
+                            {keyIssues.length > 0 && (
+                                <span className="text-xs text-green-600 font-medium">✓ Analyzed</span>
+                            )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                            Choose a model to generate suggested key issues, causes, and actions.
+                        </p>
+
+                        <div className="mb-4">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-1.5 ml-1">
+                                Select Model
+                            </label>
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value)}
+                                disabled={isAnalyzing}
+                                className="w-full text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 dark:text-slate-300"
+                            >
+                                {availableModels.map(m => (
+                                    <option key={m} value={m}>{m}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {analyzeError && (
+                            <p className="text-xs text-red-500 mb-2 px-1">{analyzeError}</p>
+                        )}
+                        <button
+                            onClick={handleAnalyzeWithAI}
+                            disabled={isAnalyzing}
+                            className={cn(
+                                "w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-all",
+                                isAnalyzing
+                                    ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-400 cursor-not-allowed"
+                                    : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 dark:shadow-none"
+                            )}
+                        >
+                            {isAnalyzing ? (
+                                <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing...</>
+                            ) : (
+                                <><Sparkles className="h-4 w-4" /> {keyIssues.length > 0 ? "Re-analyze" : "Analyze with AI"}</>
+                            )}
+                        </button>
+                    </section>
+
                     {/* Knowledge Base Suggestions */}
-                    <section className="h-[400px]">
+                    <section className="h-[320px]">
                         <KnowledgeBaseSuggestions matches={data.kbMatches} onCite={handleCiteArticle} />
+                    </section>
+
+                    {/* Suggested Key Issues — Admin CRUD */}
+                    <section className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            Suggested Key Issues
+                        </h3>
+                        <ul className="space-y-2 mb-4">
+                            {keyIssues.map((issue, i) => (
+                                <li key={i} className="flex items-start gap-3 group">
+                                    {editingIssueIdx === i ? (
+                                        <div className="flex-1 flex gap-2">
+                                            <input
+                                                className="flex-1 text-[13px] px-2 py-1 border border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50"
+                                                value={editIssueText}
+                                                onChange={e => setEditIssueText(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') { const updated = [...keyIssues]; updated[i] = editIssueText; setKeyIssues(updated); setEditingIssueIdx(null); logActivity("log", `Updated key issue #${i + 1}: "${editIssueText}"`); }
+                                                    if (e.key === 'Escape') setEditingIssueIdx(null);
+                                                }}
+                                                autoFocus
+                                            />
+                                            <button onClick={() => { const updated = [...keyIssues]; updated[i] = editIssueText; setKeyIssues(updated); setEditingIssueIdx(null); logActivity("log", `Updated key issue: "${editIssueText}"`); }} className="px-2 text-[10px] bg-indigo-600 text-white rounded-lg">Save</button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <span className="flex-shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                            <span className="flex-1 text-slate-700 dark:text-slate-300 text-[13px] leading-snug">{issue}</span>
+                                            <div className="hidden group-hover:flex gap-1">
+                                                <button onClick={() => { setEditingIssueIdx(i); setEditIssueText(issue); }} className="text-[10px] text-slate-400 hover:text-indigo-600">Edit</button>
+                                            </div>
+                                        </>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="flex gap-2">
+                            <input
+                                className="flex-1 text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
+                                placeholder="Add key issue..."
+                                value={newIssueText}
+                                onChange={e => setNewIssueText(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter' && newIssueText.trim()) { setKeyIssues(prev => [...prev, newIssueText.trim()]); logActivity("log", `Added key issue: "${newIssueText.trim()}"`); setNewIssueText(""); } }}
+                            />
+                            <button
+                                onClick={() => { if (newIssueText.trim()) { setKeyIssues(prev => [...prev, newIssueText.trim()]); logActivity("log", `Added key issue: "${newIssueText.trim()}"`); setNewIssueText(""); } }}
+                                className="p-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Suggested Potential Causes — Admin CRUD */}
+                    <section className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50 mb-4 flex items-center gap-2">
+                            <Brain className="h-4 w-4 text-purple-600" />
+                            Suggested Potential Causes
+                        </h3>
+                        <ul className="space-y-2 mb-4">
+                            {potentialCauses.map((cause, i) => (
+                                <li key={i} className="flex items-start gap-3 group">
+                                    {editingCauseIdx === i ? (
+                                        <div className="flex-1 flex gap-2">
+                                            <input
+                                                className="flex-1 text-[13px] px-2 py-1 border border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50"
+                                                value={editCauseText}
+                                                onChange={e => setEditCauseText(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') { const updated = [...potentialCauses]; updated[i] = editCauseText; setPotentialCauses(updated); setEditingCauseIdx(null); logActivity("log", `Updated cause #${i + 1}: "${editCauseText}"`); }
+                                                    if (e.key === 'Escape') setEditingCauseIdx(null);
+                                                }}
+                                                autoFocus
+                                            />
+                                            <button onClick={() => { const updated = [...potentialCauses]; updated[i] = editCauseText; setPotentialCauses(updated); setEditingCauseIdx(null); logActivity("log", `Updated cause: "${editCauseText}"`); }} className="px-2 text-[10px] bg-indigo-600 text-white rounded-lg">Save</button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <span className="flex-shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full bg-purple-500" />
+                                            <span className="flex-1 text-slate-700 dark:text-slate-300 text-[13px] leading-snug">{cause}</span>
+                                            <div className="hidden group-hover:flex gap-1">
+                                                <button onClick={() => { setEditingCauseIdx(i); setEditCauseText(cause); }} className="text-[10px] text-slate-400 hover:text-indigo-600">Edit</button>
+                                            </div>
+                                        </>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="flex gap-2">
+                            <input
+                                className="flex-1 text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 placeholder:text-slate-400"
+                                placeholder="Add cause..."
+                                value={newCauseText}
+                                onChange={e => setNewCauseText(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter' && newCauseText.trim()) { setPotentialCauses(prev => [...prev, newCauseText.trim()]); logActivity("log", `Added cause: "${newCauseText.trim()}"`); setNewCauseText(""); } }}
+                            />
+                            <button
+                                onClick={() => { if (newCauseText.trim()) { setPotentialCauses(prev => [...prev, newCauseText.trim()]); logActivity("log", `Added cause: "${newCauseText.trim()}"`); setNewCauseText(""); } }}
+                                className="p-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
                     </section>
 
                     {/* Satisfaction Rating (for resolved/closed tickets) */}
@@ -458,7 +769,7 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                     )}
 
                     {/* Agent Assist Panel */}
-                    {(data.isUserSolvable !== undefined || (data.followUpQuestions && data.followUpQuestions.length > 0)) && (
+                    {(data.isUserSolvable !== undefined || (data.followUpQuestions && data.followUpQuestions?.length > 0)) && (
                         <section className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 flex flex-col gap-6">
                             <div className="flex items-center gap-2 text-indigo-900 font-bold">
                                 <Star className="h-5 w-5 text-indigo-600" />
@@ -493,11 +804,11 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                             )}
 
                             {/* Follow-up Questions */}
-                            {data.followUpQuestions && data.followUpQuestions.length > 0 && (
+                            {data.followUpQuestions && data.followUpQuestions?.length > 0 && (
                                 <div>
                                     <h3 className="text-sm font-semibold text-indigo-900 mb-3 uppercase tracking-wider">Ask the User</h3>
                                     <ul className="space-y-3">
-                                        {data.followUpQuestions.map((q, i) => (
+                                        {data.followUpQuestions?.map((q, i) => (
                                             <li key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-indigo-100 text-sm text-slate-700 dark:text-slate-300">
                                                 {q}
                                             </li>
@@ -695,22 +1006,6 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                     </section>
                 </div>
             </div>
-        </motion.div>
-    );
-}
-
-function FileTextIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-    );
-}
-
-function BrainIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
+        </motion.div >
     );
 }

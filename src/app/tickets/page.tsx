@@ -12,6 +12,7 @@ import {
     AlertCircle,
     XCircle,
     HelpCircle,
+    Trash2,
     Globe,
     GraduationCap,
     Truck,
@@ -29,25 +30,38 @@ export default function AllTicketsPage() {
     const [filterStatus, setFilterStatus] = useState<string>("all");
     const [filterPriority, setFilterPriority] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [userRole, setUserRole] = useState<string>("guest");
+
+    const fetchTickets = async () => {
+        const includeDeleted = filterStatus === "deleted";
+        const data = await getAllTickets({ includeDeleted });
+        // Transform data if needed to match UI expectations (map fields)
+        const mappedData = data.map((t: any) => ({
+            id: t.id,
+            ticketNumber: t.ticketNumber,
+            topic: t.summary || t.topic, // Fallback
+            category: t.category || "other",
+            status: t.status,
+            priority: t.priority,
+            assignee: t.assignee || "Unassigned",
+            created: new Date(t.createdAt).toLocaleDateString(), // Format date
+            contact: t.contact
+        }));
+        setTickets(mappedData);
+    };
 
     useEffect(() => {
-        const fetchTickets = async () => {
-            const data = await getAllTickets();
-            // Transform data if needed to match UI expectations (map fields)
-            const mappedData = data.map((t: any) => ({
-                id: t.id,
-                topic: t.summary || t.topic, // Fallback
-                category: t.category || "other",
-                status: t.status,
-                priority: t.priority,
-                assignee: t.assignee || "Unassigned",
-                created: new Date(t.createdAt).toLocaleDateString(), // Format date
-                contact: t.contact
-            }));
-            setTickets(mappedData);
+        const loadRole = async () => {
+            const res = await fetch('/api/auth/session');
+            const session = await res.json();
+            if (session?.user?.role) setUserRole(session.user.role);
         };
-        fetchTickets();
+        loadRole();
     }, []);
+
+    useEffect(() => {
+        fetchTickets();
+    }, [filterStatus]);
 
     const filteredTickets = tickets.filter(ticket => {
         const matchesStatus = filterStatus === "all" || ticket.status === filterStatus;
@@ -55,6 +69,7 @@ export default function AllTicketsPage() {
         const matchesSearch =
             (ticket.topic?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
             (ticket.id?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+            (ticket.ticketNumber?.toString().toLowerCase() || "").includes(searchQuery.toLowerCase().replace("tkt-", "")) ||
             (ticket.contact?.toLowerCase() || "").includes(searchQuery.toLowerCase());
         return matchesStatus && matchesPriority && matchesSearch;
     });
@@ -78,6 +93,7 @@ export default function AllTicketsPage() {
             case "in-progress": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"><Clock className="h-3 w-3" /> In Progress</span>;
             case "resolved": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200"><CheckCircle2 className="h-3 w-3" /> Resolved</span>;
             case "closed": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"><XCircle className="h-3 w-3" /> Closed</span>;
+            case "deleted": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200"><Trash2 className="h-3 w-3" /> Deleted</span>;
             default: return null;
         }
     };
@@ -137,6 +153,9 @@ export default function AllTicketsPage() {
                             <option value="in-progress">In Progress</option>
                             <option value="resolved">Resolved</option>
                             <option value="closed">Closed</option>
+                            {(userRole === 'admin' || userRole === 'super_admin') && (
+                                <option value="deleted">Deleted (Admin only)</option>
+                            )}
                         </select>
                         <select
                             className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white dark:bg-slate-900"
@@ -176,7 +195,9 @@ export default function AllTicketsPage() {
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <Link href={`/tickets/${ticket.id}`} className="absolute inset-0 z-10" />
-                                                <span className="font-mono text-sm font-medium text-slate-600 dark:text-slate-400 relative z-0">{ticket.id}</span>
+                                                <span className="font-mono text-sm font-medium text-slate-600 dark:text-slate-400 relative z-0">
+                                                    {ticket.ticketNumber ? `#TKT-${ticket.ticketNumber.toString().padStart(3, '0')}` : ticket.id.substring(0, 8)}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">

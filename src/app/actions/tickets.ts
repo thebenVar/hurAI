@@ -7,6 +7,13 @@ import { auth } from "@/lib/auth";
 export async function createTicket(data: TicketData, departmentId?: string) {
     const session = await auth();
     try {
+        // Get the current highest ticket number
+        const lastTicket = await prisma.ticket.findFirst({
+            orderBy: { ticketNumber: 'desc' },
+            select: { ticketNumber: true }
+        });
+        const nextNumber = (lastTicket?.ticketNumber || 0) + 1;
+
         const ticket = await prisma.ticket.create({
             data: {
                 contact: data.contact,
@@ -22,6 +29,7 @@ export async function createTicket(data: TicketData, departmentId?: string) {
                 status: data.status,
                 category: data.category,
                 timeSpent: data.timeSpent,
+                ticketNumber: nextNumber,
 
                 // AI Fields
                 subCategory: data.subCategory,
@@ -51,7 +59,7 @@ export async function createTicket(data: TicketData, departmentId?: string) {
             }
         });
 
-        return { success: true, ticketId: ticket.id };
+        return { success: true, ticketId: ticket.id, ticketNumber: nextNumber };
     } catch (error) {
         console.error("Failed to create ticket:", error);
         return { success: false, error: "Failed to create ticket" };
@@ -81,6 +89,7 @@ export async function getTicket(id: string): Promise<TicketData | null> {
         sentiment: ticket.sentiment as any,
         priority: ticket.priority as any,
         summary: ticket.summary,
+        aiSummary: (ticket as any).aiSummary || undefined,
         keyIssues: JSON.parse(ticket.keyIssues),
         potentialCauses: JSON.parse(ticket.potentialCauses),
 
@@ -107,7 +116,8 @@ export async function getTicket(id: string): Promise<TicketData | null> {
             timestamp: al.timestamp.toISOString(),
             content: al.content
         })),
-        kbMatches: []
+        kbMatches: [],
+        ticketNumber: ticket.ticketNumber || undefined
     };
 }
 
@@ -117,7 +127,7 @@ export async function getTicket(id: string): Promise<TicketData | null> {
  * - user: only tickets in their departments
  * - guest: only tickets they created
  */
-export async function getAllTickets(options?: { unassignedOnly?: boolean; limit?: number }) {
+export async function getAllTickets(options?: { unassignedOnly?: boolean; limit?: number; includeDeleted?: boolean }) {
     const session = await auth();
     const role = session?.user?.role || "guest";
     const userId = session?.user?.id;
@@ -129,9 +139,10 @@ export async function getAllTickets(options?: { unassignedOnly?: boolean; limit?
         if (options?.unassignedOnly) {
             // Super admin unassigned queue
             where = { departmentId: null };
+            if (!options?.includeDeleted) where.status = { not: "deleted" };
         } else if (role === "super_admin" || role === "admin") {
             // See everything
-            where = {};
+            if (!options?.includeDeleted) where.status = { not: "deleted" };
         } else if (role === "user") {
             // Scoped to their departments
             const userDepts = await prisma.userDepartment.findMany({
@@ -140,9 +151,11 @@ export async function getAllTickets(options?: { unassignedOnly?: boolean; limit?
             });
             const deptIds = userDepts.map(d => d.departmentId);
             where = { departmentId: { in: deptIds } };
+            if (!options?.includeDeleted) where.status = { not: "deleted" };
         } else {
             // Guest: only their own tickets
             where = { creatorId: userId };
+            if (!options?.includeDeleted) where.status = { not: "deleted" };
         }
 
         const tickets = await prisma.ticket.findMany({
@@ -156,6 +169,7 @@ export async function getAllTickets(options?: { unassignedOnly?: boolean; limit?
 
         return tickets.map((ticket: any) => ({
             id: ticket.id,
+            ticketNumber: ticket.ticketNumber,
             contact: ticket.contact,
             source: ticket.source,
             topic: ticket.topic,
@@ -189,9 +203,11 @@ export async function getDashboardStats() {
                 select: { departmentId: true }
             });
             const deptIds = userDepts.map(d => d.departmentId);
-            where = { departmentId: { in: deptIds } };
+            where = { departmentId: { in: deptIds }, status: { not: "deleted" } };
         } else if (role === "guest") {
-            where = { creatorId: userId };
+            where = { creatorId: userId, status: { not: "deleted" } };
+        } else {
+            where = { status: { not: "deleted" } };
         }
 
         const totalTickets = await prisma.ticket.count({ where });
@@ -333,5 +349,123 @@ export async function toggleActionPoint(actionId: string, completed: boolean) {
     } catch (error) {
         console.error("Failed to toggle action point:", error);
         return { success: false, error: "Failed to toggle action point" };
+    }
+}
+
+/**
+ * Update AI-generated fields on a ticket after LLM analysis
+ */
+export async function updateTicketAiFields(ticketId: string, aiData: {
+    aiSummary?: string;
+    summary?: string;
+    category?: string;
+    subCategory?: string;
+    priority?: string;
+    sentiment?: string;
+    isUserSolvable?: boolean;
+    userSolvableReason?: string;
+    followUpQuestions?: string[];
+    suggestedActions?: string[];
+    keyIssues?: string[];
+    potentialCauses?: string[];
+}) {
+    try {
+        // Clear existing AI-generated action points and replace
+        await prisma.actionPoint.deleteMany({ where: { ticketId } });
+
+        await prisma.ticket.update({
+            where: { id: ticketId },
+            data: {
+                ...(aiData.aiSummary && { aiSummary: aiData.aiSummary }),
+                ...(aiData.summary && { summary: aiData.summary }),
+                ...(aiData.category && { category: aiData.category }),
+                ...(aiData.subCategory && { subCategory: aiData.subCategory }),
+                ...(aiData.priority && { priority: aiData.priority }),
+                ...(aiData.sentiment && { sentiment: aiData.sentiment }),
+                ...(aiData.isUserSolvable !== undefined && { isUserSolvable: aiData.isUserSolvable }),
+                ...(aiData.userSolvableReason && { userSolvableReason: aiData.userSolvableReason }),
+                ...(aiData.followUpQuestions && { followUpQuestions: JSON.stringify(aiData.followUpQuestions) }),
+                ...(aiData.keyIssues && { keyIssues: JSON.stringify(aiData.keyIssues) }),
+                ...(aiData.potentialCauses && { potentialCauses: JSON.stringify(aiData.potentialCauses) }),
+                ...(aiData.suggestedActions && aiData.suggestedActions.length > 0 && {
+                    actionPoints: {
+                        create: aiData.suggestedActions.map(text => ({
+                            text,
+                            completed: false,
+                            isNextAction: false
+                        }))
+                    }
+                })
+            }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update AI fields:", error);
+        return { success: false, error: "Failed to update AI fields" };
+    }
+}
+
+/**
+ * Soft delete a ticket
+ */
+export async function softDeleteTicket(ticketId: string) {
+    const session = await auth();
+    if (session?.user?.role !== "admin" && session?.user?.role !== "super_admin") {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    try {
+        await prisma.ticket.update({
+            where: { id: ticketId },
+            data: { status: "deleted" }
+        });
+
+        await prisma.activityLog.create({
+            data: {
+                ticketId,
+                type: "status_change",
+                content: "Ticket soft-deleted by admin",
+                author: session?.user?.name || "System",
+                userId: session?.user?.id || null,
+            }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to soft delete ticket:", error);
+        return { success: false, error: "Failed to delete ticket" };
+    }
+}
+
+/**
+ * Restore a soft-deleted ticket
+ */
+export async function restoreTicket(ticketId: string) {
+    const session = await auth();
+    if (session?.user?.role !== "admin" && session?.user?.role !== "super_admin") {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    try {
+        await prisma.ticket.update({
+            where: { id: ticketId },
+            data: { status: "open" } // Default back to open
+        });
+
+        await prisma.activityLog.create({
+            data: {
+                ticketId,
+                type: "status_change",
+                content: "Ticket restored by admin",
+                author: session?.user?.name || "System",
+                userId: session?.user?.id || null,
+            }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to restore ticket:", error);
+        return { success: false, error: "Failed to restore ticket" };
     }
 }

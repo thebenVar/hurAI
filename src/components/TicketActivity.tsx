@@ -12,7 +12,8 @@ import {
     Send,
     MoreHorizontal,
     Clock,
-    User
+    User,
+    Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,12 +35,13 @@ export interface ActivityItem {
 
 interface TicketActivityProps {
     activities: ActivityItem[];
+    suggestions?: string[];
     onAddActivity: (type: string, content: string) => void;
     onEscalate?: () => void;
     onClose?: () => void;
 }
 
-export function TicketActivity({ activities, onAddActivity, onEscalate, onClose }: TicketActivityProps) {
+export function TicketActivity({ activities, suggestions, onAddActivity, onEscalate, onClose }: TicketActivityProps) {
     const [newMessage, setNewMessage] = useState("");
 
     const handleSend = () => {
@@ -149,6 +151,25 @@ export function TicketActivity({ activities, onAddActivity, onEscalate, onClose 
                     ))}
                 </div>
             </div>
+
+            {/* Suggestions */}
+            {suggestions && suggestions.length > 0 && (
+                <div className="px-6 py-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 items-center">
+                    <div className="flex items-center gap-1.5 mr-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        <Sparkles className="h-3 w-3 text-indigo-500" />
+                        AI Suggestions:
+                    </div>
+                    {suggestions.map((s: string, i: number) => (
+                        <button
+                            key={i}
+                            onClick={() => setNewMessage(s)}
+                            className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs px-3 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-800/50 transition-all hover:scale-105"
+                        >
+                            {s}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {/* Action Bar */}
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">

@@ -80,7 +80,9 @@ export function GuestDashboard() {
                                     <div className="flex items-center gap-4 text-xs text-slate-400">
                                         <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
                                         <span>•</span>
-                                        <span className="font-mono text-slate-300 dark:text-slate-600">ID: {ticket.id.slice(0, 8)}</span>
+                                        <span className="font-mono">
+                                            {ticket.ticketNumber ? `#TKT-${ticket.ticketNumber.toString().padStart(3, '0')}` : `#${ticket.id.slice(0, 8)}`}
+                                        </span>
                                     </div>
                                 </Link>
                             )))}

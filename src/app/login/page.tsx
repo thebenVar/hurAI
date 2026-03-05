@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { LogIn, Key, Mail } from "lucide-react";
+import { LogIn, Key, Mail, BookOpen, Globe } from "lucide-react";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -54,6 +54,26 @@ export default function LoginPage() {
                             </svg>
                         </span>
                         Sign in with Microsoft
+                    </button>
+
+                    <button
+                        onClick={() => alert("Paratext login integration coming soon!")}
+                        className="group relative w-full flex justify-center py-2 px-4 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                    >
+                        <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <BookOpen className="h-5 w-5 text-slate-400 group-hover:text-amber-500" />
+                        </span>
+                        Sign in with Paratext
+                    </button>
+
+                    <button
+                        onClick={() => alert("unfoldingWord login integration coming soon!")}
+                        className="group relative w-full flex justify-center py-2 px-4 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                    >
+                        <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <Globe className="h-5 w-5 text-slate-400 group-hover:text-indigo-500" />
+                        </span>
+                        Sign in with unfoldingWord
                     </button>
                 </div>
 

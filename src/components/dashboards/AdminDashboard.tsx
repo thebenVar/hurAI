@@ -126,7 +126,9 @@ export function AdminDashboard() {
                                 tickets.map((ticket) => (
                                     <Link href={`/tickets/${ticket.id}`} key={ticket.id} className="block px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-colors cursor-pointer group">
                                         <div className="flex justify-between items-start mb-1">
-                                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{ticket.id}</span>
+                                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                {ticket.ticketNumber ? `#TKT-${ticket.ticketNumber.toString().padStart(3, '0')}` : ticket.id.substring(0, 8)}
+                                            </span>
                                             <span className={`text-xs px-2 py-0.5 rounded-full border ${ticket.priority === 'high' ? 'bg-red-50 text-red-700 border-red-100' :
                                                 ticket.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-100' :
                                                     'bg-blue-50 text-blue-700 border-blue-100'
@@ -135,7 +137,7 @@ export function AdminDashboard() {
                                             </span>
                                         </div>
                                         <h4 className="text-sm font-medium text-slate-900 dark:text-slate-50 group-hover:text-indigo-600 transition-colors truncate">
-                                            {ticket.summary}
+                                            {ticket.topic || ticket.summary}
                                         </h4>
                                         <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
                                             <span>{ticket.contact}</span>

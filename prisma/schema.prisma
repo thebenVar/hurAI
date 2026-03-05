@@ -75,6 +75,7 @@ model Ticket {
   isUserSolvable     Boolean?
   userSolvableReason String?
   followUpQuestions  String? // Stored as JSON string
+  aiSummary          String? // LLM-generated executive summary
 
   // Legacy field
   assignee  String?
@@ -92,9 +93,11 @@ model Ticket {
   escalationReason  String?
   satisfactionScore Int?     // e.g., 1-5 rating
 
-  status    String // "open" | "in-progress" | "resolved" | "closed"
+  status    String // "open" | "in-progress" | "resolved" | "closed" | "deleted"
   category  String // "hardware" | "software" | "network" | "access" | "translation" | "training" | "logistics" | "other"
   timeSpent String
+  
+  ticketNumber Int?     @unique // Sequential human-readable ID
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
