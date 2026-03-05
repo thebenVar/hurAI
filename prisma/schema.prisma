@@ -87,6 +87,11 @@ model Ticket {
   assigneeId     String?
   assignedTo     User?        @relation("TicketAssignee", fields: [assigneeId], references: [id])
 
+  // Interactive/PR-like features
+  isEscalated       Boolean  @default(false)
+  escalationReason  String?
+  satisfactionScore Int?     // e.g., 1-5 rating
+
   status    String // "open" | "in-progress" | "resolved" | "closed"
   category  String // "hardware" | "software" | "network" | "access" | "translation" | "training" | "logistics" | "other"
   timeSpent String
@@ -110,13 +115,14 @@ model ActionPoint {
 
 model ActivityLog {
   id        String   @id @default(cuid())
-  type      String   // "status_change" | "comment" | "note" | "log"
+  type      String   // "status_change" | "comment" | "note" | "log" | "file" | "message" | "call"
   author    String   // Legacy field
   userId    String?  // New relational DB field
   user      User?    @relation(fields: [userId], references: [id])
   
   timestamp DateTime @default(now())
   content   String
+  metadata  String?  // JSON string
   
   ticketId String
   ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)

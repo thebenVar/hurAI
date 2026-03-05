@@ -230,3 +230,108 @@ export async function assignTicketToDepartment(ticketId: string, departmentId: s
         return { success: false, error: "Failed to assign ticket" };
     }
 }
+
+/**
+ * Add an activity log entry to a ticket
+ */
+export async function addActivityLog(ticketId: string, type: string, content: string, metadata?: any) {
+    const session = await auth();
+    try {
+        const activity = await prisma.activityLog.create({
+            data: {
+                ticketId,
+                type,
+                content,
+                author: session?.user?.name || "System",
+                userId: session?.user?.id || null,
+                metadata: metadata ? JSON.stringify(metadata) : null
+            }
+        });
+        return { success: true, activity };
+    } catch (error) {
+        console.error("Failed to add activity log:", error);
+        return { success: false, error: "Failed to log activity" };
+    }
+}
+
+/**
+ * Escalate a ticket
+ */
+export async function escalateTicket(ticketId: string, reason: string) {
+    const session = await auth();
+    try {
+        await prisma.ticket.update({
+            where: { id: ticketId },
+            data: {
+                isEscalated: true,
+                escalationReason: reason,
+                priority: "high" // auto-bump priority
+            }
+        });
+
+        // Add to log
+        await prisma.activityLog.create({
+            data: {
+                ticketId,
+                type: "status_change",
+                content: `Ticket escalated: ${reason}`,
+                author: session?.user?.name || "System",
+                userId: session?.user?.id || null,
+            }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to escalate ticket:", error);
+        return { success: false, error: "Failed to escalate ticket" };
+    }
+}
+
+/**
+ * Update satisfaction score
+ */
+export async function updateSatisfaction(ticketId: string, score: number) {
+    const session = await auth();
+    try {
+        await prisma.ticket.update({
+            where: { id: ticketId },
+            data: { satisfactionScore: score }
+        });
+
+        await prisma.activityLog.create({
+            data: {
+                ticketId,
+                type: "log",
+                content: `User indicated satisfaction score: ${score}/5`,
+                author: session?.user?.name || "System",
+                userId: session?.user?.id || null,
+            }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update satisfaction:", error);
+        return { success: false, error: "Failed to update satisfaction" };
+    }
+}
+
+/**
+ * Toggle Action Point completion status
+ */
+export async function toggleActionPoint(actionId: string, completed: boolean) {
+    const session = await auth();
+    try {
+        await prisma.actionPoint.update({
+            where: { id: actionId },
+            data: { completed }
+        });
+
+        // We could also log this to activityLog if we want, 
+        // but the UI logs it optimistically already
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to toggle action point:", error);
+        return { success: false, error: "Failed to toggle action point" };
+    }
+}

@@ -31,6 +31,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TicketActivity, ActivityItem } from "./TicketActivity";
 import { KnowledgeBaseSuggestions, KBArticle } from "./KnowledgeBaseSuggestions";
+import { addActivityLog, escalateTicket, updateSatisfaction, toggleActionPoint } from "@/app/actions/tickets";
+import { useRouter } from "next/navigation";
 
 export interface TicketData {
     id: string;
@@ -49,6 +51,8 @@ export interface TicketData {
     isUserSolvable?: boolean;
     userSolvableReason?: string;
     followUpQuestions?: string[];
+    isEscalated?: boolean;
+    satisfactionScore?: number | null;
 
     assignee: string;
     status: "open" | "in-progress" | "resolved" | "closed";
@@ -59,6 +63,8 @@ export interface TicketData {
 }
 
 export function TicketDashboard({ data }: { data: TicketData }) {
+    const router = useRouter();
+
     // Local state
     const [actions, setActions] = useState(data.actionPoints);
     const [activities, setActivities] = useState(data.activityLog);
@@ -82,36 +88,72 @@ export function TicketDashboard({ data }: { data: TicketData }) {
     }, [data.actionPoints, data.activityLog]);
 
     // Helper to log activities
-    const logActivity = (type: ActivityItem["type"], content: string, note?: string) => {
+    const logActivity = async (type: ActivityItem["type"], content: string, note?: string) => {
+        const fullContent = note ? `${content}\n\nNote: ${note}` : content;
+
+        // Optimistic UI update
         const newActivity: ActivityItem = {
             id: `act-${Date.now()}`,
             type,
-            author: "You", // In real app, current user
+            author: "Loading...",
             timestamp: "Just now",
-            content: note ? `${content}\n\nNote: ${note}` : content
+            content: fullContent
         };
         setActivities(prev => [newActivity, ...prev]);
+
+        // Real server action
+        const result = await addActivityLog(data.id, type, fullContent);
+        if (result.success && result.activity) {
+            setActivities(prev => prev.map(a =>
+                a.id === newActivity.id
+                    ? { ...a, id: result.activity.id, author: result.activity.author }
+                    : a
+            ));
+        }
     };
 
-    // Mock handler for adding activity from the Activity Log component
-    const handleAddActivity = (type: string, content: string) => {
-        logActivity(type as ActivityItem["type"], content);
+    // Handler for adding activity from the Activity Log component
+    const handleAddActivity = async (type: string, content: string) => {
+        await logActivity(type as ActivityItem["type"], content);
     };
 
-    const handleCiteArticle = (article: KBArticle) => {
-        logActivity("note", `Suggested reference: ${article.title} (${article.url})`);
+    const handleCiteArticle = async (article: KBArticle) => {
+        await logActivity("note", `Suggested reference: ${article.title} (${article.url})`);
     };
 
     // Action Point Handlers
-    const toggleAction = (id: string) => {
-        setActions(prev => prev.map(a => {
-            if (a.id === id) {
-                const newCompleted = !a.completed;
-                logActivity("status_change", `Marked action point '${a.text}' as ${newCompleted ? "completed" : "incomplete"}`);
-                return { ...a, completed: newCompleted };
-            }
-            return a;
-        }));
+    const toggleAction = async (id: string) => {
+        const action = actions.find(a => a.id === id);
+        if (!action) return;
+
+        const newCompleted = !action.completed;
+
+        // Optimistic update
+        setActions(prev => prev.map(a =>
+            a.id === id ? { ...a, completed: newCompleted } : a
+        ));
+
+        logActivity("status_change", `Marked action point '${action.text}' as ${newCompleted ? "completed" : "incomplete"}`);
+
+        // Real server action
+        await toggleActionPoint(id, newCompleted);
+    };
+
+    const handleEscalate = async () => {
+        const reason = prompt("Enter escalation reason:");
+        if (!reason) return;
+
+        const result = await escalateTicket(data.id, reason);
+        if (result.success) {
+            logActivity("status_change", `Ticket escalated: ${reason}`);
+            router.refresh(); // Refresh page to reflect new status/priority
+        }
+    };
+
+    const handleClose = async () => {
+        // In reality, this would call an updateStatus action
+        logActivity("status_change", "Ticket marked as resolved");
+        // router.refresh();
     };
 
     const setAsNextAction = (id: string) => {
@@ -259,6 +301,12 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                                 <div className="h-4 w-4 rounded-full border-2 border-current" />}
                         <span className="font-medium capitalize">{data.sentiment} Sentiment</span>
                     </div>
+                    {data.isEscalated && (
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg border bg-red-50 border-red-200 text-red-700 animate-pulse">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="font-bold text-sm">ESCALATED</span>
+                        </div>
+                    )}
                     <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                         <span className="font-medium">Assignee:</span>
                         <div className="flex items-center gap-1.5">
@@ -345,8 +393,13 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                         </section>
 
                         {/* Activity Log */}
-                        <section>
-                            <TicketActivity activities={activities} onAddActivity={handleAddActivity} />
+                        <section className="h-[600px]">
+                            <TicketActivity
+                                activities={activities}
+                                onAddActivity={handleAddActivity}
+                                onEscalate={handleEscalate}
+                                onClose={handleClose}
+                            />
                         </section>
                     </div>
                 </div>
@@ -357,6 +410,52 @@ export function TicketDashboard({ data }: { data: TicketData }) {
                     <section className="h-[400px]">
                         <KnowledgeBaseSuggestions matches={data.kbMatches} onCite={handleCiteArticle} />
                     </section>
+
+                    {/* Satisfaction Rating (for resolved/closed tickets) */}
+                    {(data.status === 'resolved' || data.status === 'closed') && (
+                        <section className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                            <div className="flex flex-col items-center justify-center text-center space-y-4">
+                                <div>
+                                    <h3 className="font-semibold text-slate-900 dark:text-slate-50">How was your experience?</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Please rate the support you received for this ticket.</p>
+                                </div>
+
+                                {data.satisfactionScore ? (
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <Star
+                                                key={star}
+                                                className={cn(
+                                                    "h-8 w-8",
+                                                    star <= data.satisfactionScore!
+                                                        ? "text-yellow-400 fill-yellow-400"
+                                                        : "text-slate-200 dark:text-slate-700"
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                onClick={async () => {
+                                                    const res = await updateSatisfaction(data.id, star);
+                                                    if (res.success) {
+                                                        router.refresh();
+                                                        logActivity("log", `User rated the interaction ${star}/5 stars.`);
+                                                    }
+                                                }}
+                                                className="p-1 hover:scale-110 transition-transform focus:outline-none"
+                                            >
+                                                <Star className="h-8 w-8 text-slate-300 hover:text-yellow-400 hover:fill-yellow-400 transition-colors" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    )}
 
                     {/* Agent Assist Panel */}
                     {(data.isUserSolvable !== undefined || (data.followUpQuestions && data.followUpQuestions.length > 0)) && (

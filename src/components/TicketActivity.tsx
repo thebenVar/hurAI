@@ -35,9 +35,11 @@ export interface ActivityItem {
 interface TicketActivityProps {
     activities: ActivityItem[];
     onAddActivity: (type: string, content: string) => void;
+    onEscalate?: () => void;
+    onClose?: () => void;
 }
 
-export function TicketActivity({ activities, onAddActivity }: TicketActivityProps) {
+export function TicketActivity({ activities, onAddActivity, onEscalate, onClose }: TicketActivityProps) {
     const [newMessage, setNewMessage] = useState("");
 
     const handleSend = () => {
@@ -185,14 +187,24 @@ export function TicketActivity({ activities, onAddActivity }: TicketActivityProp
                         <User className="h-3.5 w-3.5" />
                         Assign
                     </button>
-                    <button className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        Close Ticket
-                    </button>
-                    <button className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 flex items-center gap-1.5 transition-colors">
-                        <AlertCircle className="h-3.5 w-3.5" />
-                        Escalate
-                    </button>
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-green-600 flex items-center gap-1.5 transition-colors"
+                        >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Close Ticket
+                        </button>
+                    )}
+                    {onEscalate && (
+                        <button
+                            onClick={onEscalate}
+                            className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 flex items-center gap-1.5 transition-colors"
+                        >
+                            <AlertCircle className="h-3.5 w-3.5" />
+                            Escalate
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

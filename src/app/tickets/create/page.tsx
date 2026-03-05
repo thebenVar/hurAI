@@ -19,7 +19,11 @@ interface Department {
 function CreateTicketContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const [viewState, setViewState] = useState<"selection" | "upload" | "processing" | "result" | "manual-entry" | "live-call">("selection");
+    // Default to selection, unless URL specifies a known view
+    const initialView = (searchParams.get("view") as "selection" | "upload" | "manual-entry" | "live-call") || "selection";
+    const [viewState, setViewState] = useState<"selection" | "upload" | "processing" | "result" | "manual-entry" | "live-call">(
+        ["selection", "upload", "manual-entry", "live-call"].includes(initialView) ? initialView : "selection"
+    );
     const [ticketData, setTicketData] = useState<TicketData | null>(null);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [selectedDeptId, setSelectedDeptId] = useState<string>("");
