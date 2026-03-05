@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { encrypt, decrypt } from "@/lib/encryption";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
 
 export type AiConfiguration = {
     defaultModel: string;
@@ -56,6 +57,11 @@ export async function getAiConfiguration(): Promise<AiConfiguration> {
 
 export async function saveAiConfiguration(data: AiConfiguration) {
     try {
+        const session = await auth();
+        if (session?.user?.role !== "super_admin") {
+            return { success: false, error: "Unauthorized. Super Admin access required." };
+        }
+
         // Fetch existing settings to keep existing keys if the user submits masked values back
         const existing = await prisma.systemSettings.findUnique({
             where: { id: "default_settings" }

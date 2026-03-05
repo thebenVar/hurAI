@@ -83,7 +83,7 @@ export async function getTicket(id: string): Promise<TicketData | null> {
         userSolvableReason: ticket.userSolvableReason || undefined,
         followUpQuestions: ticket.followUpQuestions ? JSON.parse(ticket.followUpQuestions) : [],
 
-        assignee: ticket.assignee,
+        assignee: ticket.assignee || "",
         status: ticket.status as any,
         category: ticket.category as any,
         timeSpent: ticket.timeSpent,
