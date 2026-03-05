@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     User,
     Bell,
@@ -21,9 +21,11 @@ import {
     Linkedin,
     Bot,
     Eye,
-    EyeOff
+    EyeOff,
+    Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getAiConfiguration, saveAiConfiguration, type AiConfiguration } from "@/app/actions/settings";
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState("general");
@@ -32,6 +34,47 @@ export default function SettingsPage() {
     const [darkMode, setDarkMode] = useState(false);
     const [twoFactor, setTwoFactor] = useState(false);
     const [showKey, setShowKey] = useState<Record<string, boolean>>({});
+
+    // AI Configuration State
+    const [aiConfig, setAiConfig] = useState<AiConfiguration>({
+        defaultModel: "GPT-4o",
+        openAiKey: "",
+        anthropicKey: "",
+        geminiKey: ""
+    });
+    const [isLoadingAi, setIsLoadingAi] = useState(true);
+    const [isSavingAi, setIsSavingAi] = useState(false);
+    const [saveMessage, setSaveMessage] = useState({ text: "", type: "" });
+
+    // Load AI Config on Mount
+    useEffect(() => {
+        getAiConfiguration()
+            .then((data) => {
+                setAiConfig(data);
+                setIsLoadingAi(false);
+            })
+            .catch((err) => {
+                console.error(err);
+                setIsLoadingAi(false);
+            });
+    }, []);
+
+    const handleSaveAiConfig = async () => {
+        setIsSavingAi(true);
+        setSaveMessage({ text: "", type: "" });
+
+        const result = await saveAiConfiguration(aiConfig);
+
+        setIsSavingAi(false);
+        if (result.success) {
+            setSaveMessage({ text: "Settings saved securely.", type: "success" });
+            // Re-fetch to get masked keys back if they changed
+            getAiConfiguration().then(setAiConfig);
+            setTimeout(() => setSaveMessage({ text: "", type: "" }), 3000);
+        } else {
+            setSaveMessage({ text: "Failed to save settings.", type: "error" });
+        }
+    };
 
     const tabs = [
         { id: "general", label: "General", icon: Globe },
@@ -305,70 +348,107 @@ export default function SettingsPage() {
                             <div className="space-y-6 max-w-xl">
                                 <div>
                                     <h2 className="text-lg font-semibold text-slate-900 mb-1">AI Configuration</h2>
-                                    <p className="text-sm text-slate-500">Manage your LLM API keys and preferences.</p>
+                                    <p className="text-sm text-slate-500">Manage your LLM API keys and preferences securely.</p>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-700">Default Model</label>
-                                        <select className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white">
-                                            <option>GPT-4o</option>
-                                            <option>Claude 3.5 Sonnet</option>
-                                            <option>Gemini 1.5 Pro</option>
-                                        </select>
+                                {isLoadingAi ? (
+                                    <div className="flex items-center justify-center p-12">
+                                        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
                                     </div>
+                                ) : (
+                                    <>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-slate-700">Default Model</label>
+                                                <select
+                                                    value={aiConfig.defaultModel}
+                                                    onChange={(e) => setAiConfig(prev => ({ ...prev, defaultModel: e.target.value }))}
+                                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
+                                                >
+                                                    <option value="GPT-4o">GPT-4o</option>
+                                                    <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+                                                    <option value="Gemini 1.5 Pro">Gemini 1.5 Pro</option>
+                                                </select>
+                                            </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-700">OpenAI API Key</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showKey.openai ? "text" : "password"}
-                                                placeholder="sk-..."
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all pr-10"
-                                            />
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-slate-700">OpenAI API Key</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showKey.openai ? "text" : "password"}
+                                                        placeholder="sk-..."
+                                                        value={aiConfig.openAiKey}
+                                                        onChange={(e) => setAiConfig(prev => ({ ...prev, openAiKey: e.target.value }))}
+                                                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all pr-10 font-mono text-sm"
+                                                    />
+                                                    <button
+                                                        onClick={() => setShowKey(prev => ({ ...prev, openai: !prev.openai }))}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                    >
+                                                        {showKey.openai ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-slate-700">Anthropic API Key</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showKey.anthropic ? "text" : "password"}
+                                                        placeholder="sk-ant-..."
+                                                        value={aiConfig.anthropicKey}
+                                                        onChange={(e) => setAiConfig(prev => ({ ...prev, anthropicKey: e.target.value }))}
+                                                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all pr-10 font-mono text-sm"
+                                                    />
+                                                    <button
+                                                        onClick={() => setShowKey(prev => ({ ...prev, anthropic: !prev.anthropic }))}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                    >
+                                                        {showKey.anthropic ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-slate-700">Google Gemini API Key</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showKey.gemini ? "text" : "password"}
+                                                        placeholder="AIza..."
+                                                        value={aiConfig.geminiKey}
+                                                        onChange={(e) => setAiConfig(prev => ({ ...prev, geminiKey: e.target.value }))}
+                                                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all pr-10 font-mono text-sm"
+                                                    />
+                                                    <button
+                                                        onClick={() => setShowKey(prev => ({ ...prev, gemini: !prev.gemini }))}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                    >
+                                                        {showKey.gemini ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4 flex items-center justify-end gap-4">
+                                            {saveMessage.text && (
+                                                <span className={cn(
+                                                    "text-sm font-medium",
+                                                    saveMessage.type === "success" ? "text-green-600" : "text-red-600"
+                                                )}>
+                                                    {saveMessage.text}
+                                                </span>
+                                            )}
                                             <button
-                                                onClick={() => setShowKey(prev => ({ ...prev, openai: !prev.openai }))}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                onClick={handleSaveAiConfig}
+                                                disabled={isSavingAi}
+                                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
-                                                {showKey.openai ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                {isSavingAi && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                Save Configuration
                                             </button>
                                         </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-700">Anthropic API Key</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showKey.anthropic ? "text" : "password"}
-                                                placeholder="sk-ant-..."
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all pr-10"
-                                            />
-                                            <button
-                                                onClick={() => setShowKey(prev => ({ ...prev, anthropic: !prev.anthropic }))}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                            >
-                                                {showKey.anthropic ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-700">Google Gemini API Key</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showKey.gemini ? "text" : "password"}
-                                                placeholder="AIza..."
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all pr-10"
-                                            />
-                                            <button
-                                                onClick={() => setShowKey(prev => ({ ...prev, gemini: !prev.gemini }))}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                            >
-                                                {showKey.gemini ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                    </>
+                                )}
                             </div>
                         )}
 

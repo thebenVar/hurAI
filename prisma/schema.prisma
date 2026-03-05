@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model Ticket {
@@ -58,4 +59,13 @@ model ActivityLog {
   
   ticketId String
   ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model SystemSettings {
+  id                    String   @id @default("default_settings")
+  defaultModel          String   @default("GPT-4o")
+  encryptedOpenAiKey    String?
+  encryptedAnthropicKey String?
+  encryptedGeminiKey    String?
+  updatedAt             DateTime @updatedAt
 }
