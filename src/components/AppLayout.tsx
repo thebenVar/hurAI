@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -21,6 +22,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             <div className="lg:pl-64 flex flex-col min-h-screen transition-all duration-300">
                 <Header onMenuClick={() => setIsSidebarOpen(true)} />
+                <Breadcrumb />
                 <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
                     {children}
                 </main>
