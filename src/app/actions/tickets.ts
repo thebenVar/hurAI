@@ -2,9 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { TicketData } from "@/components/TicketDashboard";
-import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 
-export async function createTicket(data: TicketData) {
+export async function createTicket(data: TicketData, departmentId?: string) {
+    const session = await auth();
     try {
         const ticket = await prisma.ticket.create({
             data: {
@@ -15,8 +16,8 @@ export async function createTicket(data: TicketData) {
                 sentiment: data.sentiment,
                 priority: data.priority,
                 summary: data.summary,
-                keyIssues: JSON.stringify(data.keyIssues), // Store array as JSON
-                potentialCauses: JSON.stringify(data.potentialCauses), // Store array as JSON
+                keyIssues: JSON.stringify(data.keyIssues),
+                potentialCauses: JSON.stringify(data.potentialCauses),
                 assignee: data.assignee,
                 status: data.status,
                 category: data.category,
@@ -28,7 +29,10 @@ export async function createTicket(data: TicketData) {
                 userSolvableReason: data.userSolvableReason,
                 followUpQuestions: JSON.stringify(data.followUpQuestions),
 
-                // Relations
+                // Relational
+                departmentId: departmentId || null,
+                creatorId: session?.user?.id || null,
+
                 actionPoints: {
                     create: data.actionPoints.map(ap => ({
                         text: ap.text,
@@ -39,8 +43,9 @@ export async function createTicket(data: TicketData) {
                 activityLog: {
                     create: {
                         type: "log",
-                        author: "System",
-                        content: "Ticket created via Smart Ticket Creation"
+                        author: session?.user?.name || "System",
+                        userId: session?.user?.id || null,
+                        content: "Ticket created"
                     }
                 }
             }
@@ -60,7 +65,8 @@ export async function getTicket(id: string): Promise<TicketData | null> {
             actionPoints: true,
             activityLog: {
                 orderBy: { timestamp: 'desc' }
-            }
+            },
+            department: { select: { id: true, name: true } }
         }
     });
 
@@ -98,30 +104,70 @@ export async function getTicket(id: string): Promise<TicketData | null> {
             id: al.id,
             type: al.type as any,
             author: al.author,
-            timestamp: al.timestamp.toISOString(), // formatting logic can be improved
+            timestamp: al.timestamp.toISOString(),
             content: al.content
         })),
-        kbMatches: [] // Mock for now
+        kbMatches: []
     };
 }
 
-export async function getAllTickets() {
+/**
+ * Fetch tickets scoped to the current user's role:
+ * - super_admin/admin: all tickets (or filtered by dept if desired)
+ * - user: only tickets in their departments
+ * - guest: only tickets they created
+ */
+export async function getAllTickets(options?: { unassignedOnly?: boolean; limit?: number }) {
+    const session = await auth();
+    const role = session?.user?.role || "guest";
+    const userId = session?.user?.id;
+    const limit = options?.limit ?? 50;
+
     try {
+        let where: any = {};
+
+        if (options?.unassignedOnly) {
+            // Super admin unassigned queue
+            where = { departmentId: null };
+        } else if (role === "super_admin" || role === "admin") {
+            // See everything
+            where = {};
+        } else if (role === "user") {
+            // Scoped to their departments
+            const userDepts = await prisma.userDepartment.findMany({
+                where: { userId },
+                select: { departmentId: true }
+            });
+            const deptIds = userDepts.map(d => d.departmentId);
+            where = { departmentId: { in: deptIds } };
+        } else {
+            // Guest: only their own tickets
+            where = { creatorId: userId };
+        }
+
         const tickets = await prisma.ticket.findMany({
+            where,
             orderBy: { createdAt: 'desc' },
-            take: 10 // Limit for dashboard
+            take: limit,
+            include: {
+                department: { select: { id: true, name: true } }
+            }
         });
 
         return tickets.map((ticket: any) => ({
             id: ticket.id,
             contact: ticket.contact,
-            source: ticket.source as any,
+            source: ticket.source,
             topic: ticket.topic,
-            priority: ticket.priority as any,
-            status: ticket.status as any,
+            priority: ticket.priority,
+            status: ticket.status,
             timeSpent: ticket.timeSpent,
             createdAt: ticket.createdAt.toISOString(),
-            summary: ticket.summary
+            summary: ticket.summary,
+            category: ticket.category,
+            assignee: ticket.assignee,
+            departmentId: ticket.departmentId,
+            departmentName: ticket.department?.name ?? null,
         }));
     } catch (error) {
         console.error("Failed to fetch tickets:", error);
@@ -130,13 +176,29 @@ export async function getAllTickets() {
 }
 
 export async function getDashboardStats() {
+    const session = await auth();
+    const role = session?.user?.role || "guest";
+    const userId = session?.user?.id;
+
     try {
-        const totalTickets = await prisma.ticket.count();
+        let where: any = {};
+
+        if (role === "user") {
+            const userDepts = await prisma.userDepartment.findMany({
+                where: { userId },
+                select: { departmentId: true }
+            });
+            const deptIds = userDepts.map(d => d.departmentId);
+            where = { departmentId: { in: deptIds } };
+        } else if (role === "guest") {
+            where = { creatorId: userId };
+        }
+
+        const totalTickets = await prisma.ticket.count({ where });
         const pendingActions = await prisma.actionPoint.count({
-            where: { completed: false }
+            where: { completed: false, ticket: where }
         });
 
-        // Placeholder for complex metrics not yet implemented
         return {
             totalTickets,
             avgResolution: "--",
@@ -145,11 +207,26 @@ export async function getDashboardStats() {
         };
     } catch (error) {
         console.error("Failed to fetch stats:", error);
-        return {
-            totalTickets: 0,
-            avgResolution: "--",
-            customerSatisfaction: "--",
-            pendingActions: 0
-        };
+        return { totalTickets: 0, avgResolution: "--", customerSatisfaction: "--", pendingActions: 0 };
+    }
+}
+
+/**
+ * Assign a ticket to a department (super_admin only)
+ */
+export async function assignTicketToDepartment(ticketId: string, departmentId: string | null) {
+    const session = await auth();
+    if (session?.user?.role !== "super_admin") {
+        return { success: false, error: "Unauthorized" };
+    }
+    try {
+        await prisma.ticket.update({
+            where: { id: ticketId },
+            data: { departmentId }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to assign ticket:", error);
+        return { success: false, error: "Failed to assign ticket" };
     }
 }

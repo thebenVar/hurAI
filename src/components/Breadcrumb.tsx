@@ -15,6 +15,11 @@ const SEGMENT_LABELS: Record<string, string> = {
     new: "New",
 };
 
+// Special compound path overrides (e.g. /admin/tickets = "Unassigned Tickets")
+const PATH_OVERRIDES: Record<string, string> = {
+    "/admin/tickets": "Unassigned Tickets",
+};
+
 function getLabel(segment: string, index: number, segments: string[]): string {
     // If it's the segment after 'departments' or 'users', it's an ID - show "Edit"
     const prevSegment = segments[index - 1];
@@ -34,7 +39,7 @@ export function Breadcrumb() {
 
     const crumbs = segments.map((segment, i) => {
         const href = "/" + segments.slice(0, i + 1).join("/");
-        const label = getLabel(segment, i, segments);
+        const label = PATH_OVERRIDES[href] ?? getLabel(segment, i, segments);
         const isLast = i === segments.length - 1;
         return { href, label, isLast };
     });

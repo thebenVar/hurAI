@@ -9,16 +9,20 @@ import { ManualTicketForm } from "@/components/ManualTicketForm";
 import { generateTicketDetails } from "@/app/actions/llm";
 import { createTicket } from "@/app/actions/tickets";
 import { LiveCallAssistant } from "@/components/LiveCallAssistant";
-import { Headset, Sparkles, PenLine, Mic } from "lucide-react";
+import { Headset, Sparkles, PenLine, Mic, Building2 } from "lucide-react";
 
-// Mock data removed in favor of DB
-
+interface Department {
+    id: string;
+    name: string;
+}
 
 function CreateTicketContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [viewState, setViewState] = useState<"selection" | "upload" | "processing" | "result" | "manual-entry" | "live-call">("selection");
     const [ticketData, setTicketData] = useState<TicketData | null>(null);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [selectedDeptId, setSelectedDeptId] = useState<string>("");
 
     // Pre-fill data from URL params
     const initialContact = searchParams.get("contact") || "";
@@ -26,6 +30,14 @@ function CreateTicketContent() {
     const initialSource = searchParams.get("source") as any || "phone";
 
     const [aiInitialData, setAiInitialData] = useState<any>(null);
+
+    // Fetch available departments
+    useEffect(() => {
+        fetch("/api/departments")
+            .then(r => r.json())
+            .then(data => setDepartments(data.departments || []))
+            .catch(() => { });
+    }, []);
 
     useEffect(() => {
         const analyzeMessage = async () => {
@@ -56,22 +68,20 @@ function CreateTicketContent() {
                 }
             }
         };
-
         analyzeMessage();
     }, [searchParams, initialDescription]);
 
-    const handleFileSelect = (file: File) => {
+    const handleFileSelect = () => {
         setViewState("processing");
     };
 
     const handleProcessingComplete = () => {
-        // setTicketData(MOCK_TICKET_DATA); // Removed
         setViewState("result");
     };
 
     const handleManualSubmit = async (data: TicketData) => {
         try {
-            const result = await createTicket(data);
+            const result = await createTicket(data, selectedDeptId || undefined);
             if (result.success) {
                 router.push(`/tickets/${result.ticketId}`);
             } else {
@@ -87,12 +97,38 @@ function CreateTicketContent() {
         setViewState("result");
     };
 
+    // Department selector — shown above the form options
+    const DeptSelector = () => (
+        departments.length > 0 ? (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-5 py-4 mb-6 flex items-center gap-4">
+                <Building2 className="w-5 h-5 text-indigo-500 flex-shrink-0" />
+                <div className="flex-1">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">
+                        Target Department <span className="text-slate-400 font-normal">(optional)</span>
+                    </label>
+                    <select
+                        value={selectedDeptId}
+                        onChange={e => setSelectedDeptId(e.target.value)}
+                        className="w-full text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    >
+                        <option value="">Unassigned</option>
+                        {departments.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        ) : null
+    );
+
     return (
         <div className="max-w-5xl mx-auto">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Create New Ticket</h1>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">Choose how you want to create a ticket: upload a call recording, start a live session, or enter details manually.</p>
             </div>
+
+            <DeptSelector />
 
             <div className="relative min-h-[400px]">
                 {viewState === "selection" && (
@@ -151,10 +187,7 @@ function CreateTicketContent() {
 
                 {viewState === "upload" && (
                     <div className="animate-in fade-in zoom-in-95 duration-500 space-y-6">
-                        <button
-                            onClick={() => setViewState("selection")}
-                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-50 flex items-center gap-2"
-                        >
+                        <button onClick={() => setViewState("selection")} className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-2">
                             ← Back to options
                         </button>
                         <AudioUploader onFileSelect={handleFileSelect} />
@@ -163,10 +196,7 @@ function CreateTicketContent() {
 
                 {viewState === "manual-entry" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-                        <button
-                            onClick={() => setViewState("selection")}
-                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-50 flex items-center gap-2"
-                        >
+                        <button onClick={() => setViewState("selection")} className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-2">
                             ← Back to options
                         </button>
                         <ManualTicketForm
@@ -184,10 +214,7 @@ function CreateTicketContent() {
 
                 {viewState === "live-call" && (
                     <div className="animate-in fade-in zoom-in-95 duration-500 space-y-6">
-                        <button
-                            onClick={() => setViewState("selection")}
-                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-50 flex items-center gap-2"
-                        >
+                        <button onClick={() => setViewState("selection")} className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-2">
                             ← Back to options
                         </button>
                         <LiveCallAssistant
@@ -207,10 +234,7 @@ function CreateTicketContent() {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
                         <div className="flex justify-end">
                             <button
-                                onClick={() => {
-                                    setViewState("selection");
-                                    setTicketData(null);
-                                }}
+                                onClick={() => { setViewState("selection"); setTicketData(null); }}
                                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
                             >
                                 Create Another Ticket

@@ -13,20 +13,22 @@ import {
     Building2,
     Users,
     ShieldCheck,
+    Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MAIN_NAV = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard, exact: true },
-    { label: "New Ticket", href: "/tickets/create", icon: PlusCircle, exact: true },
-    { label: "All Tickets", href: "/tickets", icon: Ticket, exact: false },
-    { label: "Settings", href: "/settings", icon: Settings, exact: false },
+    { label: "Dashboard", href: "/", icon: LayoutDashboard, exact: true, roles: ["super_admin", "admin", "user", "guest"] },
+    { label: "New Ticket", href: "/tickets/create", icon: PlusCircle, exact: true, roles: ["super_admin", "admin", "user", "guest"] },
+    { label: "All Tickets", href: "/tickets", icon: Ticket, exact: false, roles: ["super_admin", "admin", "user"] },
+    { label: "Settings", href: "/settings", icon: Settings, exact: false, roles: ["super_admin", "admin", "user"] },
 ];
 
 const ADMIN_NAV = [
-    { label: "Overview", href: "/admin", icon: ShieldCheck, exact: true },
-    { label: "Departments", href: "/admin/departments", icon: Building2, exact: false },
-    { label: "Users", href: "/admin/users", icon: Users, exact: false },
+    { label: "Overview", href: "/admin", icon: ShieldCheck, exact: true, roles: ["super_admin", "admin"] },
+    { label: "Unassigned Tickets", href: "/admin/tickets", icon: Inbox, exact: false, roles: ["super_admin"] },
+    { label: "Departments", href: "/admin/departments", icon: Building2, exact: false, roles: ["super_admin", "admin"] },
+    { label: "Users", href: "/admin/users", icon: Users, exact: false, roles: ["super_admin", "admin"] },
 ];
 
 interface SidebarProps {
@@ -70,7 +72,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {/* Nav */}
             <nav className="flex-1 overflow-y-auto p-4 space-y-1">
                 {/* Main section */}
-                {MAIN_NAV.map((item) => {
+                {MAIN_NAV.filter(item => item.roles.includes(role || "guest")).map((item) => {
                     const active = isActive(item.href, item.exact);
                     return (
                         <Link
@@ -98,7 +100,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 Admin
                             </p>
                         </div>
-                        {ADMIN_NAV.map((item) => {
+                        {ADMIN_NAV.filter(item => item.roles.includes(role || "")).map((item) => {
                             const active = isActive(item.href, item.exact);
                             return (
                                 <Link
