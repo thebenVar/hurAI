@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Mail, ArrowRight, X, Send } from "lucide-react";
+import { MessageCircle, Mail, ArrowRight, X, Send, Hash, Phone, Globe } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -8,10 +8,12 @@ export interface IncomingMessage {
     id: string;
     sender: string;
     text: string;
-    platform: "whatsapp" | "email" | "internal";
+    platform: string;
     timestamp: string;
     avatarColor: string;
     type?: "text" | "voice" | "image" | "video";
+    aiSummary?: string | null;
+    aiUrgency?: string | null;
 }
 
 interface MessageFeedProps {
@@ -62,9 +64,21 @@ export function MessageFeed({ messages, onDismiss }: MessageFeedProps) {
                                         <div className="bg-blue-500 rounded-full p-1">
                                             <Mail className="h-2.5 w-2.5 text-white" />
                                         </div>
+                                    ) : msg.platform === 'slack' ? (
+                                        <div className="bg-purple-500 rounded-full p-1">
+                                            <Hash className="h-2.5 w-2.5 text-white" />
+                                        </div>
+                                    ) : msg.platform === 'telegram' ? (
+                                        <div className="bg-sky-500 rounded-full p-1">
+                                            <Send className="h-2.5 w-2.5 text-white" />
+                                        </div>
+                                    ) : msg.platform === 'voice' ? (
+                                        <div className="bg-amber-500 rounded-full p-1">
+                                            <Phone className="h-2.5 w-2.5 text-white" />
+                                        </div>
                                     ) : (
                                         <div className="bg-slate-500 rounded-full p-1">
-                                            <Send className="h-2.5 w-2.5 text-white" />
+                                            <Globe className="h-2.5 w-2.5 text-white" />
                                         </div>
                                     )}
                                 </div>
@@ -79,8 +93,18 @@ export function MessageFeed({ messages, onDismiss }: MessageFeedProps) {
                                     {msg.type === 'voice' && <span className="italic text-slate-500 dark:text-slate-400">🎤 Voice Note: </span>}
                                     {msg.type === 'image' && <span className="italic text-slate-500 dark:text-slate-400">🖼️ Image: </span>}
                                     {msg.type === 'video' && <span className="italic text-slate-500 dark:text-slate-400">🎥 Video: </span>}
-                                    {msg.text}
+                                    {msg.aiSummary || msg.text}
                                 </p>
+                                {msg.aiUrgency && (
+                                    <span className={cn(
+                                        "inline-flex items-center text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full mt-1",
+                                        msg.aiUrgency === 'high' ? 'bg-red-100 text-red-700' :
+                                            msg.aiUrgency === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                                'bg-green-100 text-green-700'
+                                    )}>
+                                        {msg.aiUrgency}
+                                    </span>
+                                )}
 
                                 <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                     <Link

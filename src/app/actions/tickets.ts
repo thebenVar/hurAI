@@ -263,6 +263,46 @@ export async function addActivityLog(ticketId: string, type: string, content: st
                 metadata: metadata ? JSON.stringify(metadata) : null
             }
         });
+
+        // Slack Bi-directional sync
+        if (type === "message" || type === "reply" || type === "note") {
+            const inboxMsg = await prisma.inboxMessage.findUnique({
+                where: { ticketId },
+                include: { instance: { include: { plugin: true } } }
+            });
+
+            if (inboxMsg && inboxMsg.instance.plugin.name.toLowerCase() === "slack" && inboxMsg.externalId) {
+                try {
+                    const slackConfig = JSON.parse(inboxMsg.instance.config);
+                    // externalId format is channelId|thread_ts
+                    const parts = inboxMsg.externalId.split('|');
+
+                    if (parts.length === 2 && slackConfig.bot_token) {
+                        const [channel, thread_ts] = parts;
+                        const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${slackConfig.bot_token}`
+                            },
+                            body: JSON.stringify({
+                                channel,
+                                thread_ts,
+                                text: `*Reply from ${activity.author}:*\n${content}`
+                            })
+                        });
+
+                        const slackData = await slackRes.json();
+                        if (!slackData.ok) {
+                            console.error("Slack postMessage error:", slackData.error);
+                        }
+                    }
+                } catch (slackErr) {
+                    console.error("Failed to sync reply to Slack:", slackErr);
+                }
+            }
+        }
+
         return { success: true, activity };
     } catch (error) {
         console.error("Failed to add activity log:", error);

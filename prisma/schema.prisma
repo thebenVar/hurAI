@@ -139,3 +139,42 @@ model SystemSettings {
   encryptedGeminiKey    String?
   updatedAt             DateTime @updatedAt
 }
+
+// ── Live Inbox & Community Plugins ──────────────────────────
+
+model IntegrationPlugin {
+  id           String   @id @default(cuid())
+  name         String                          // "Slack", "Telegram"
+  description  String?
+  icon         String?                         // Lucide icon name or URL
+  configSchema String?                         // JSON: required fields definition
+  status       String   @default("community")  // "stable", "beta", "community"
+  instances    IntegrationInstance[]
+  createdAt    DateTime @default(now())
+}
+
+model IntegrationInstance {
+  id        String              @id @default(cuid())
+  pluginId  String
+  plugin    IntegrationPlugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  name      String                              // "EU WhatsApp Line"
+  isActive  Boolean             @default(true)
+  config    String                              // Encrypted JSON (keys/secrets)
+  messages  InboxMessage[]
+  createdAt DateTime            @default(now())
+}
+
+model InboxMessage {
+  id          String              @id @default(cuid())
+  instanceId  String
+  instance    IntegrationInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  externalId  String?
+  senderId    String
+  senderName  String?
+  content     String
+  aiSummary   String?
+  aiUrgency   String?                           // "low", "medium", "high"
+  isConverted Boolean             @default(false)
+  ticketId    String?             @unique
+  receivedAt  DateTime            @default(now())
+}

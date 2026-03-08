@@ -6,39 +6,11 @@ import { ArrowRight } from "lucide-react";
 import { MessageFeed, IncomingMessage } from "@/components/MessageFeed";
 import { QuickActions } from "@/components/QuickActions";
 import { getAllTickets, getDashboardStats } from "@/app/actions/tickets";
+import { getInboxMessages, dismissMessage } from "@/app/actions/inbox";
 
-const MOCK_MESSAGES: IncomingMessage[] = [
-    {
-        id: "msg-1",
-        sender: "John Doe",
-        text: "Hey, the printer on the 2nd floor is jammed again. Can someone check it?",
-        platform: "whatsapp",
-        timestamp: "2m ago",
-        avatarColor: "bg-green-100 text-green-700",
-        type: "text"
-    },
-    {
-        id: "msg-2",
-        sender: "Priya Singh",
-        text: "I'm locked out of my account. Error code 503.",
-        platform: "whatsapp",
-        timestamp: "15m ago",
-        avatarColor: "bg-blue-100 text-blue-700",
-        type: "text"
-    },
-    {
-        id: "msg-3",
-        sender: "marketing-team@company.com",
-        text: "Urgent: Website is down for external traffic.",
-        platform: "email",
-        timestamp: "1h ago",
-        avatarColor: "bg-purple-100 text-purple-700",
-        type: "text"
-    }
-];
 
 export function AdminDashboard() {
-    const [messages, setMessages] = useState<IncomingMessage[]>(MOCK_MESSAGES);
+    const [messages, setMessages] = useState<IncomingMessage[]>([]);
     const [tickets, setTickets] = useState<any[]>([]);
     const [stats, setStats] = useState({
         totalTickets: 0,
@@ -50,12 +22,14 @@ export function AdminDashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [ticketsData, statsData] = await Promise.all([
+                const [ticketsData, statsData, inboxData] = await Promise.all([
                     getAllTickets(),
-                    getDashboardStats()
+                    getDashboardStats(),
+                    getInboxMessages()
                 ]);
                 setTickets(ticketsData);
                 setStats(statsData);
+                setMessages(inboxData);
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
             }
@@ -76,8 +50,9 @@ export function AdminDashboard() {
         setMessages([newMessage, ...messages]);
     };
 
-    const handleDismiss = (id: string) => {
+    const handleDismiss = async (id: string) => {
         setMessages(messages.filter(m => m.id !== id));
+        await dismissMessage(id);
     };
 
     return (

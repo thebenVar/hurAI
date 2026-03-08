@@ -22,12 +22,59 @@ import {
     Bot,
     Eye,
     EyeOff,
-    Loader2
+    Loader2,
+    X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAiConfiguration, saveAiConfiguration, type AiConfiguration } from "@/app/actions/settings";
+import { getPlugins, installPlugin, uninstallPlugin, updatePluginConfig } from "@/app/actions/integrations";
 import { useTheme } from "next-themes";
 import { signOut } from "next-auth/react";
+import * as Icons from "lucide-react";
+
+const PLUGIN_GUIDES: Record<string, React.ReactNode> = {
+    'Slack': (
+        <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+            <h4 className="font-bold text-slate-900 dark:text-slate-50 text-base">How to configure Slack</h4>
+            <p>1. Go to <a href="https://api.slack.com/apps" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">api.slack.com/apps</a> and click <strong>Create New App</strong>.</p>
+            <p>2. Choose <strong>From scratch</strong>, name your app (e.g., KCS Support), and select your workspace.</p>
+            <p>3. In the sidebar, go to <strong>OAuth & Permissions</strong>. Under "Bot Token Scopes", add these 3 scopes:</p>
+            <ul className="list-disc pl-5 space-y-1 font-mono text-xs bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                <li>chat:write</li>
+                <li>channels:history</li>
+                <li>users:read</li>
+            </ul>
+            <p>4. Scroll up and click <strong>Install to Workspace</strong>. Copy the <strong>Bot User OAuth Token</strong> and paste it into the form on the right.</p>
+            <p>5. In the sidebar, go to <strong>Basic Information</strong>. Scroll down to <strong>App Credentials</strong> to find and copy your <strong>Signing Secret</strong>.</p>
+            <p>6. Finally, go to <strong>Event Subscriptions</strong> -&gt; Enable Events. Paste this Webhook URL into the Request URL field:</p>
+            <div className="bg-slate-900 text-green-400 p-2 rounded-lg font-mono text-xs overflow-x-auto">
+                https://&lt;your-domain&gt;/api/webhooks/&lt;instance-id&gt;
+            </div>
+            <p className="text-xs italic text-amber-600 dark:text-amber-400">Note: Replace &lt;your-domain&gt; with your server's public URL, and &lt;instance-id&gt; will be generated after install. You can update the webhook URL later.</p>
+            <p>7. Under "Subscribe to bot events", add <code>message.channels</code>, save changes, and you're done! Once you complete the installation here, you'll be able to see the generated instance ID.</p>
+            <p>8. <strong>Channel ID:</strong> To find the ID of the channel you want KCS to monitor, open Slack, right-click the channel name in the sidebar, select <strong>View channel details</strong>, and scroll to the bottom to find the Channel ID (e.g., <code>C12345678</code>).</p>
+        </div>
+    ),
+    'WhatsApp': (
+        <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+            <h4 className="font-bold text-slate-900 dark:text-slate-50 text-base">How to configure WhatsApp</h4>
+            <p>1. Go to the <a href="https://developers.facebook.com/" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">Meta Developer Dashboard</a> and create a business app.</p>
+            <p>2. Add the <strong>WhatsApp Developer</strong> product to your app.</p>
+            <p>3. In the WhatsApp -&gt; Getting Started dashboard, copy your <strong>Phone Number ID</strong> and a temporary or permanent <strong>Access Token</strong>.</p>
+            <p>4. When configuring Webhooks in Meta, create a secure random string for your <strong>Webhook Verify Token</strong> and paste it here.</p>
+            <p>5. Set the webhook URL to your KCS instance and verify it.</p>
+        </div>
+    ),
+    'Email': (
+        <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+            <h4 className="font-bold text-slate-900 dark:text-slate-50 text-base">How to configure Email Webhooks</h4>
+            <p>1. Use a designated email provider like Sendgrid or Mailgun.</p>
+            <p>2. Set up inbound parsing for your custom domain.</p>
+            <p>3. Create a secure password to use as your <strong>Webhook Secret</strong>.</p>
+            <p>4. Point the inbound parse webhook to your KCS installation webhook endpoint.</p>
+        </div>
+    )
+};
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState("general");
@@ -36,6 +83,15 @@ export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const [twoFactor, setTwoFactor] = useState(false);
     const [showKey, setShowKey] = useState<Record<string, boolean>>({});
+
+    // Integrations State
+    const [plugins, setPlugins] = useState<any[]>([]);
+    const [isLoadingPlugins, setIsLoadingPlugins] = useState(true);
+    const [selectedPlugin, setSelectedPlugin] = useState<any | null>(null);
+    const [pluginConfig, setPluginConfig] = useState<Record<string, string>>({});
+    const [pluginName, setPluginName] = useState("");
+    const [isInstalling, setIsInstalling] = useState(false);
+    const [editingInstanceId, setEditingInstanceId] = useState<string | null>(null);
 
     // AI Configuration State
     const [aiConfig, setAiConfig] = useState<AiConfiguration>({
@@ -59,7 +115,21 @@ export default function SettingsPage() {
                 console.error(err);
                 setIsLoadingAi(false);
             });
+
+        loadPlugins();
     }, []);
+
+    const loadPlugins = async () => {
+        setIsLoadingPlugins(true);
+        try {
+            const data = await getPlugins();
+            setPlugins(data);
+        } catch (err) {
+            console.error("Failed to load plugins:", err);
+        } finally {
+            setIsLoadingPlugins(false);
+        }
+    };
 
     const handleSaveAiConfig = async () => {
         setIsSavingAi(true);
@@ -75,6 +145,47 @@ export default function SettingsPage() {
             setTimeout(() => setSaveMessage({ text: "", type: "" }), 3000);
         } else {
             setSaveMessage({ text: "Failed to save settings.", type: "error" });
+        }
+    };
+
+    const handleInstallPlugin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedPlugin) return;
+
+        setIsInstalling(true);
+        let result;
+
+        if (editingInstanceId) {
+            result = await updatePluginConfig(editingInstanceId, pluginName, pluginConfig);
+        } else {
+            result = await installPlugin(selectedPlugin.id, pluginName, pluginConfig);
+        }
+
+        setIsInstalling(false);
+
+        if (result.success) {
+            closeIntegrationModal();
+            loadPlugins(); // Refresh
+        } else {
+            alert(result.error);
+        }
+    };
+
+    const closeIntegrationModal = () => {
+        setSelectedPlugin(null);
+        setPluginConfig({});
+        setPluginName("");
+        setEditingInstanceId(null);
+    };
+
+    const handleUninstall = async (instanceId: string) => {
+        if (!confirm("Are you sure you want to uninstall this integration?")) return;
+
+        const result = await uninstallPlugin(instanceId);
+        if (result.success) {
+            loadPlugins();
+        } else {
+            alert(result.error);
         }
     };
 
@@ -450,63 +561,191 @@ export default function SettingsPage() {
                         {activeTab === "integrations" && (
                             <div className="space-y-6 max-w-xl">
                                 <div>
-                                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-1">Integrations</h2>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">Connect with other services.</p>
+                                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-1">Integrations & Plugins</h2>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Connect with other services by installing community plugins.</p>
                                 </div>
 
-                                <div className="space-y-4">
-                                    {/* Public Forums */}
-                                    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                                                <MessageSquare className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-900 dark:text-slate-50">Public Forums</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">Connect to community discussions</p>
-                                            </div>
-                                        </div>
-                                        <button className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-                                            Connect
-                                        </button>
+                                {isLoadingPlugins ? (
+                                    <div className="flex justify-center p-8">
+                                        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
                                     </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {plugins.map(plugin => {
+                                            const IconComponent = (Icons as any)[plugin.icon || "Link"] || Link;
+                                            const hasSchema = plugin.configSchema && plugin.configSchema.length > 5;
 
-                                    {/* Social Media */}
-                                    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-sky-50 rounded-lg text-sky-500">
-                                                <Twitter className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-900 dark:text-slate-50">Twitter / X</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">Monitor brand mentions</p>
-                                            </div>
-                                        </div>
-                                        <button className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 transition-colors">
-                                            Configure
-                                        </button>
-                                    </div>
+                                            return (
+                                                <div key={plugin.id} className="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 overflow-hidden">
+                                                    <div className="p-4 flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                                                <IconComponent className="h-5 w-5" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-medium text-slate-900 dark:text-slate-50 flex items-center gap-2">
+                                                                    {plugin.name}
+                                                                    <span className={cn(
+                                                                        "text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider",
+                                                                        plugin.status === 'stable' ? 'bg-green-100 text-green-700' :
+                                                                            plugin.status === 'beta' ? 'bg-amber-100 text-amber-700' :
+                                                                                'bg-slate-100 text-slate-700'
+                                                                    )}>
+                                                                        {plugin.status}
+                                                                    </span>
+                                                                </p>
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400">{plugin.description}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                if (!hasSchema) {
+                                                                    // Direct install
+                                                                    installPlugin(plugin.id, `${plugin.name} Connection`, {}).then((res: any) => {
+                                                                        if (res.success) loadPlugins();
+                                                                    });
+                                                                } else {
+                                                                    setSelectedPlugin(plugin);
+                                                                    setPluginName(`${plugin.name} Connection`);
+                                                                    setPluginConfig({});
+                                                                }
+                                                            }}
+                                                            className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+                                                        >
+                                                            Install
+                                                        </button>
+                                                    </div>
 
-                                    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-blue-50 rounded-lg text-blue-700">
-                                                <Linkedin className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-900 dark:text-slate-50">LinkedIn</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">Sync company updates</p>
-                                            </div>
-                                        </div>
-                                        <button className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-                                            Connect
-                                        </button>
+                                                    {/* Instances List */}
+                                                    {plugin.instances && plugin.instances.length > 0 && (
+                                                        <div className="bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 p-4 space-y-3">
+                                                            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Connections</h4>
+                                                            {plugin.instances.map((instance: any) => (
+                                                                <div key={instance.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+                                                                    <div>
+                                                                        <p className="text-sm font-medium text-slate-900 dark:text-slate-50 flex items-center gap-2">
+                                                                            <span className={cn("h-2 w-2 rounded-full", instance.isActive ? "bg-green-500" : "bg-slate-300")} />
+                                                                            {instance.name}
+                                                                        </p>
+                                                                        <p className="text-[10px] text-slate-400 font-mono mt-1 pr-4">{instance.id}</p>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setSelectedPlugin(plugin);
+                                                                                setPluginName(instance.name);
+                                                                                setEditingInstanceId(instance.id);
+                                                                                try {
+                                                                                    setPluginConfig(JSON.parse(instance.config || "{}"));
+                                                                                } catch (e) {
+                                                                                    setPluginConfig({});
+                                                                                }
+                                                                            }}
+                                                                            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                                                                        >
+                                                                            Edit
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleUninstall(instance.id)}
+                                                                            className="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded bg-red-50 hover:bg-red-100 transition-colors"
+                                                                        >
+                                                                            Uninstall
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                </div>
+                                )}
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Install Modal */}
+            {selectedPlugin && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className={cn(
+                        "bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]",
+                        PLUGIN_GUIDES[selectedPlugin.name] ? "max-w-4xl" : "max-w-md"
+                    )}>
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+                            <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-50">
+                                {editingInstanceId ? "Edit" : "Install"} {selectedPlugin.name}
+                            </h3>
+                            <button onClick={closeIntegrationModal} className="text-slate-400 hover:text-slate-600">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
+                            {/* Guide Section (Left) */}
+                            {PLUGIN_GUIDES[selectedPlugin.name] && (
+                                <div className="w-full md:w-1/2 p-6 bg-slate-50 dark:bg-slate-800/20 border-r border-slate-100 dark:border-slate-800 overflow-y-auto">
+                                    {PLUGIN_GUIDES[selectedPlugin.name]}
+                                </div>
+                            )}
+
+                            {/* Form Section (Right) */}
+                            <div className={cn(
+                                "p-6 overflow-y-auto",
+                                PLUGIN_GUIDES[selectedPlugin.name] ? "w-full md:w-1/2" : "w-full"
+                            )}>
+                                <form onSubmit={handleInstallPlugin} className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Connection Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={pluginName}
+                                            onChange={(e) => setPluginName(e.target.value)}
+                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            placeholder="e.g. EU Support Line"
+                                        />
+                                    </div>
+
+                                    {selectedPlugin.configSchema && JSON.parse(selectedPlugin.configSchema).map((field: any) => (
+                                        <div key={field.key} className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{field.label}</label>
+                                            <input
+                                                type={field.type === 'password' ? 'password' : 'text'}
+                                                required
+                                                value={pluginConfig[field.key] || ""}
+                                                onChange={(e) => setPluginConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono text-sm"
+                                                placeholder={`Enter ${field.label}`}
+                                            />
+                                        </div>
+                                    ))}
+
+                                    <div className="pt-4 flex justify-end gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={closeIntegrationModal}
+                                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isInstalling}
+                                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                                        >
+                                            {isInstalling ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                            {editingInstanceId ? "Update Connection" : "Complete Installation"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
