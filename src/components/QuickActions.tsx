@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Upload, Ticket, Send, Mic, Image as ImageIcon, Video } from "lucide-react";
+import { Plus, Upload, Ticket, Send, Mic, Image as ImageIcon, Video, MonitorPlay } from "lucide-react";
 
 interface QuickActionsProps {
     onAddMessage: (text: string, type: "text" | "voice" | "image" | "video") => void;
@@ -88,6 +88,16 @@ export function QuickActions({ onAddMessage }: QuickActionsProps) {
                         <Upload className="h-5 w-5" />
                     </div>
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Upload Call Recording</span>
+                </Link>
+
+                <Link
+                    href="/tickets/create"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all group"
+                >
+                    <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <MonitorPlay className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700">Screen Share Session</span>
                 </Link>
 
                 <Link

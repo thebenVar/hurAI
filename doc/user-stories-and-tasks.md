@@ -94,6 +94,24 @@ Implement essential security measures for POC deployment.
 
 ---
 
+#### US-1.4: Attach Message to Existing Ticket
+**As a** support agent
+**I want to** attach a new message to an existing ticket
+**So that** I can consolidate follow-up communications
+
+**Acceptance Criteria:**
+- "Attach to Ticket" option on each message
+- System suggests candidate tickets based on:
+    - Sender match
+    - Ticket ID in message
+    - Topic/Keyword match
+- Search/Select manually if suggestion is wrong
+- Message added to ticket activity log
+
+**Priority:** P1 (Should Have - POC)
+
+---
+
 ### Epic 2: Intelligent Self-Service Portal
 
 #### US-2.1: End User Ticket Submission

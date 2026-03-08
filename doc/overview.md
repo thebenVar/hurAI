@@ -31,6 +31,7 @@ Located prominently on the dashboard (and optimized for mobile), this module all
 *   **Quick Log**: A versatile input field for instantly logging text, voice, image, or video notes.
 *   **Open a Ticket**: A direct link to the full manual ticket creation form.
 *   **Upload Call Recording**: Access to the experimental call analysis module.
+*   **Screen Share Session**: Start a live screen sharing session with AI-powered activity tracking.
 *   **View My Tickets**: Quick navigation to the agent's personal queue.
 
 **Mobile Optimization**: On mobile devices, the Quick Actions panel automatically moves to the top of the screen to prioritize data entry and ticket creation.
@@ -68,6 +69,27 @@ A module for processing support call recordings.
 *   **Audio Upload**: Agents can upload audio files of support calls.
 *   **Live Call Assistant**: Intended to provide real-time transcription and analysis.
 *   **Automated Extraction**: The system aims to automatically extract key issues, sentiment, and action items from the audio to pre-fill ticket data.
+
+### 4.3. Screen Share Assistant (NEW)
+An AI-powered live screen sharing module that captures and analyzes user sessions.
+*   **Real-time Screen Capture**: Agents can share their screen or have users share theirs during support sessions.
+*   **Intelligent Activity Detection**: AI automatically identifies and categorizes actions:
+    *   **Navigation**: Detecting page navigation, window switching, and menu interactions
+    *   **Errors**: Capturing error dialogs, console messages, and system alerts
+    *   **User Input**: Tracking form submissions, clicks, and data entry
+    *   **System Events**: Identifying notifications, updates, and system messages
+*   **Issue Identification**: Automatically extracts key issues observed during the session
+*   **Learning Capture**: AI generates insights and learnings from the session:
+    *   **Issues**: Problems and errors encountered
+    *   **Solutions**: Resolution steps that worked
+    *   **Tips**: User skill level and behavior patterns
+    *   **Process**: Documentation of procedures and workflows
+*   **Automated Ticket Creation**: All captured data, screenshots, and insights are automatically compiled into a structured ticket with:
+    *   Detected topic and category
+    *   Timeline of significant actions
+    *   Key issues and potential causes
+    *   Recommended action points
+    *   Visual evidence (screenshots of important moments)
 
 ## 5. Technical Architecture
 

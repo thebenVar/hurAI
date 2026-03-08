@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, PhoneOff, Sparkles, User, MessageSquare, AlertCircle, CheckCircle2, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TicketData } from "./TicketDashboard";
@@ -24,7 +24,36 @@ interface Suggestion {
     text: string;
 }
 
-export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantProps) {
+// Type for Web Speech API
+interface SpeechRecognitionInstance {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
+    onresult: ((event: SpeechRecognitionEvent) => void) | null;
+    onerror: ((event: Event) => void) | null;
+    start: () => void;
+    stop: () => void;
+}
+
+interface SpeechRecognitionEvent {
+    resultIndex: number;
+    results: {
+        [index: number]: {
+            [index: number]: {
+                transcript: string;
+            };
+        };
+    };
+}
+
+declare global {
+    interface Window {
+        SpeechRecognition?: new () => SpeechRecognitionInstance;
+        webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+    }
+}
+
+export function LiveCallAssistant({ onComplete }: LiveCallAssistantProps) {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
     const [currentText, setCurrentText] = useState("");
@@ -36,22 +65,23 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
     const [detectedTopic, setDetectedTopic] = useState<string | null>(null);
     const [keyIssues, setKeyIssues] = useState<string[]>([]);
 
-    const recognitionRef = useRef<any>(null);
-    const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+    const ticketIdRef = useRef<string | null>(null);
 
     // Initialize Speech Recognition
     useEffect(() => {
         if (typeof window !== "undefined") {
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (SpeechRecognition) {
                 const recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
                 recognition.lang = "en-US";
 
-                recognition.onresult = (event: any) => {
+                recognition.onresult = (event: SpeechRecognitionEvent) => {
                     const current = event.resultIndex;
                     const transcriptText = event.results[current][0].transcript;
+                    setCurrentText(transcriptText);
                 };
 
                 recognitionRef.current = recognition;
@@ -89,6 +119,8 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
         }
     };
 
+    // Unused function - kept for future development
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const addTranscriptItem = (text: string) => {
         // Simple heuristic to alternate speakers or detect based on context (mock)
         // In a real app, speaker diarization would be handled by the audio model
@@ -102,7 +134,8 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
         setTranscript(prev => [...prev, newItem]);
     };
 
-    // Mock AI Analysis Logic
+    // Mock AI Analysis Logic - kept for future development
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const analyzeText = (text: string) => {
         const lowerText = text.toLowerCase();
 
@@ -143,9 +176,17 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
             setIsListening(false);
         }
 
+        // Generate unique ID using current timestamp
+        if (!ticketIdRef.current) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const timestamp = now.getTime().toString().slice(-4);
+            ticketIdRef.current = `INC-${year}-${timestamp}`;
+        }
+
         // Generate Ticket Data
         const finalData: TicketData = {
-            id: `INC-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`,
+            id: ticketIdRef.current,
             contact: "Unknown Caller", // In real app, would be identified
             source: "phone",
             duration: formatDuration(duration),
@@ -163,8 +204,7 @@ export function LiveCallAssistant({ onComplete, onCancel }: LiveCallAssistantPro
             status: "open",
             category: "other",
             timeSpent: formatDuration(duration),
-            activityLog: [],
-            kbMatches: []
+            activityLog: []
         };
 
         onComplete(finalData);
