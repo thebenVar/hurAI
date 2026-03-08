@@ -1,4 +1,4 @@
-**hurAI**
+**KINGDOM CLOUD SERVICES**
 
 Many Bible translation teams work in remote places where:
 
