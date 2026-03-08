@@ -1,8 +1,8 @@
-# Kingdom Cloud Services: User Stories and Development Tasks
+# hurAI: User Stories and Development Tasks
 
 **Document Version:** 1.0  
 **Date:** November 26, 2025  
-**Project:** Kingdom Cloud Services (Helpdesk with a Unified Response)
+**Project:** hurAI (Helpdesk with a Unified Response)
 
 ---
 
@@ -373,7 +373,7 @@ Implement essential security measures for POC deployment.
 
 ---
 
-#### US-5.5: Kingdom Cloud Services AI Trend Identification
+#### US-5.5: hurAI Trend Identification
 **As a** support agent/manager  
 **I want to** receive AI-identified insights about emerging trends  
 **So that** I can proactively address systemic issues
@@ -736,7 +736,7 @@ Implement essential security measures for POC deployment.
 
 ---
 
-#### T-2.5: Kingdom Cloud Services AI Placeholder
+#### T-2.5: hurAI Placeholder
 - [ ] Create AI assistant UI component
 - [ ] Mock trend identification
 - [ ] "X trends identified" display
@@ -913,7 +913,7 @@ Implement essential security measures for POC deployment.
 
 ---
 
-#### T-5.5: Kingdom Cloud Services AI Trend Analysis
+#### T-5.5: hurAI Trend Analysis
 - [ ] Daily batch job for trend identification
 - [ ] Pattern detection algorithms
 - [ ] Spike detection (volume changes)
@@ -1309,7 +1309,7 @@ Implement essential security measures for POC deployment.
 - Ticket List with search/filter
 - Quick Actions panel
 - Message-to-ticket creation
-- Kingdom Cloud Services AI placeholder
+- hurAI placeholder
 - Call recording upload
 - Escalation workflow
 - Follow-up context mapping

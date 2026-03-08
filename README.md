@@ -1,4 +1,4 @@
-# Kingdom Cloud Services Dashboard
+# hurAI Dashboard
 
 A modern helpdesk dashboard for managing tickets, viewing live messages, and utilizing AI insights. This project is a Next.js application designed to streamline support operations.
 
@@ -8,7 +8,7 @@ A modern helpdesk dashboard for managing tickets, viewing live messages, and uti
 -   **Ticket Dashboard**: Visualize key metrics such as Resolution Time, Customer Satisfaction (CSAT), and Ticket Volume.
 -   **Recent Activity**: Track the latest incidents and their status (High, Medium, Low priority).
 -   **Quick Actions**: Rapidly create new tickets or log messages.
--   **AI-Powered Insights**: "Kingdom Cloud Services AI" provides emerging trend analysis and suggestions.
+-   **AI-Powered Insights**: "hurAI" provides emerging trend analysis and suggestions.
 -   **Call Analysis & Audio Upload (Experimental)**: Modules for uploading and analyzing support calls.
 
 ## Tech Stack

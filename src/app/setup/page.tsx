@@ -42,7 +42,7 @@ export default function SetupPage() {
                         <Building2 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white">
-                        Welcome to Kingdom Cloud Services
+                        Welcome to hurAI
                     </h2>
                     <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
                         Let's get started by creating your organization. You will be assigned as the Super Admin.

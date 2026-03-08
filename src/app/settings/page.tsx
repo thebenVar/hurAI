@@ -37,7 +37,7 @@ const PLUGIN_GUIDES: Record<string, React.ReactNode> = {
         <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
             <h4 className="font-bold text-slate-900 dark:text-slate-50 text-base">How to configure Slack</h4>
             <p>1. Go to <a href="https://api.slack.com/apps" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">api.slack.com/apps</a> and click <strong>Create New App</strong>.</p>
-            <p>2. Choose <strong>From scratch</strong>, name your app (e.g., KCS Support), and select your workspace.</p>
+            <p>2. Choose <strong>From scratch</strong>, name your app (e.g., hurAI Support), and select your workspace.</p>
             <p>3. In the sidebar, go to <strong>OAuth & Permissions</strong>. Under "Bot Token Scopes", add these 3 scopes:</p>
             <ul className="list-disc pl-5 space-y-1 font-mono text-xs bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                 <li>chat:write</li>
@@ -52,7 +52,7 @@ const PLUGIN_GUIDES: Record<string, React.ReactNode> = {
             </div>
             <p className="text-xs italic text-amber-600 dark:text-amber-400">Note: Replace &lt;your-domain&gt; with your server's public URL, and &lt;instance-id&gt; will be generated after install. You can update the webhook URL later.</p>
             <p>7. Under "Subscribe to bot events", add <code>message.channels</code>, save changes, and you're done! Once you complete the installation here, you'll be able to see the generated instance ID.</p>
-            <p>8. <strong>Channel ID:</strong> To find the ID of the channel you want KCS to monitor, open Slack, right-click the channel name in the sidebar, select <strong>View channel details</strong>, and scroll to the bottom to find the Channel ID (e.g., <code>C12345678</code>).</p>
+            <p>8. <strong>Channel ID:</strong> To find the ID of the channel you want hurAI to monitor, open Slack, right-click the channel name in the sidebar, select <strong>View channel details</strong>, and scroll to the bottom to find the Channel ID (e.g., <code>C12345678</code>).</p>
         </div>
     ),
     'WhatsApp': (
@@ -62,7 +62,7 @@ const PLUGIN_GUIDES: Record<string, React.ReactNode> = {
             <p>2. Add the <strong>WhatsApp Developer</strong> product to your app.</p>
             <p>3. In the WhatsApp -&gt; Getting Started dashboard, copy your <strong>Phone Number ID</strong> and a temporary or permanent <strong>Access Token</strong>.</p>
             <p>4. When configuring Webhooks in Meta, create a secure random string for your <strong>Webhook Verify Token</strong> and paste it here.</p>
-            <p>5. Set the webhook URL to your KCS instance and verify it.</p>
+            <p>5. Set the webhook URL to your hurAI instance and verify it.</p>
         </div>
     ),
     'Email': (
@@ -71,7 +71,7 @@ const PLUGIN_GUIDES: Record<string, React.ReactNode> = {
             <p>1. Use a designated email provider like Sendgrid or Mailgun.</p>
             <p>2. Set up inbound parsing for your custom domain.</p>
             <p>3. Create a secure password to use as your <strong>Webhook Secret</strong>.</p>
-            <p>4. Point the inbound parse webhook to your KCS installation webhook endpoint.</p>
+            <p>4. Point the inbound parse webhook to your hurAI installation webhook endpoint.</p>
         </div>
     )
 };

@@ -130,7 +130,7 @@ export function AdminDashboard() {
                     <QuickActions onAddMessage={handleAddMessage} />
 
                     <div className="bg-indigo-900 rounded-2xl p-6 text-white shadow-lg shadow-indigo-200">
-                        <h3 className="font-semibold text-lg mb-2">Kingdom Cloud Services AI</h3>
+                        <h3 className="font-semibold text-lg mb-2">hurAI</h3>
                         <p className="text-indigo-200 text-sm mb-6">
                             3 emerging trends identified today.
                         </p>

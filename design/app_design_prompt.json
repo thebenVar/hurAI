@@ -1,5 +1,5 @@
 {
-    "app_name": "Kingdom Cloud Services - Intelligent Helpdesk System",
+    "app_name": "hurAI - Intelligent Helpdesk System",
     "version": "1.0.0",
     "description": "A modern, AI-powered helpdesk application designed to streamline ticket creation, management, and resolution. It leverages AI to analyze voice calls and audio recordings, automatically extracting key issues, action points, and sentiment to assist support agents.",
     "tech_stack": {

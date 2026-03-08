@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kingdom Cloud Services",
+  title: "hurAI",
   description: "A comprehensive solution for BT Cloud Services and support",
 };
 
